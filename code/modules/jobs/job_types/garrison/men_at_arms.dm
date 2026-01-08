@@ -1,19 +1,16 @@
 /datum/job/men_at_arms
 	title = "Men-at-arms"
-	tutorial = "Chosen by the Captain and King, you're not like those shit stinking City Watchmen. \
-	Like a hound on a leash, you stand vigilant for your masters. \
-	You live better than the rest of the taffers in this kingdom-- \
-	infact, you take shifts manning the gate with your brethren, assuming the gatemaster isn't there, \
-	keeping the savages out, keeping the shit-covered knaves away from your foppish superiors. \
-	It will be a cold day in hell when you and your compatriots are slain, and nobody in this town will care. \
-	The nobility needs good men, and they only come in a pair of pairs."
+	tutorial = "You are a member of the town guard. \
+	You've proven yourself worthy to the Captain and now you've got yourself a salary... \
+	as long as you keep the peace that is."
 	department_flag = GARRISON
 	job_flags = (JOB_ANNOUNCE_ARRIVAL | JOB_SHOW_IN_CREDITS | JOB_EQUIP_RANK | JOB_NEW_PLAYER_JOINABLE)
 	display_order = JDO_MENATARMS
 	faction = FACTION_TOWN
-	total_positions = 0
-	spawn_positions = 0
+	total_positions = 6
+	spawn_positions = 1
 	bypass_lastclass = TRUE
+	allowed_sexes = list(MALE)
 
 	allowed_races = RACES_PLAYER_NONDISCRIMINATED
 	blacklisted_species = list(SPEC_ID_HALFLING)
@@ -42,7 +39,7 @@
 	pants = /obj/item/clothing/pants/trou/leather/guard
 	shoes = /obj/item/clothing/shoes/boots
 	belt = /obj/item/storage/belt/leather
-	beltl = /obj/item/storage/keyring/manorguard
+	beltl = /obj/item/storage/keyring/captain
 
 /datum/outfit/watchman/post_equip(mob/living/carbon/human/H, visuals_only = FALSE)
 	. = ..()
