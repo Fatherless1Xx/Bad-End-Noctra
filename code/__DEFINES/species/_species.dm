@@ -45,6 +45,7 @@
 	SPEC_ID_ROUSMAN,\
 	SPEC_ID_ZIZOMBIE,\
 	SPEC_ID_HUMAN_SPACE,\
+	SPEC_ID_HALFLING,\
 )
 
 /// Species where females get underwear, no underwear for kobold, rakshari, medicator and triton, dwarves handled seperately
@@ -97,6 +98,7 @@
 	SPEC_ID_KOBOLD,\
 	SPEC_ID_HOLLOWKIN,\
 	SPEC_ID_HALF_ORC,\
+	SPEC_ID_HALFLING,\
 )
 
 /// Species not considered discriminated against in Vanderlin. Used for nobility, etc.
