@@ -25,6 +25,8 @@
 	/// Components attached to this datum
 	/// Lazy associated list in the structure of `type:component/list of components`
 	var/list/datum_components
+	/// Open tgui UIs associated with this datum.
+	var/list/open_uis
 	/// Any datum registered to receive signals from this datum is in this list
 	/// Lazy associated list in the structure of `signal:registree/list of registrees`
 	var/list/comp_lookup

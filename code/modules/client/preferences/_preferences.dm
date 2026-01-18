@@ -51,6 +51,8 @@ GLOBAL_LIST_INIT(name_adjustments, list())
 
 	var/tgui_fancy = TRUE
 	var/tgui_lock = TRUE
+	var/tgui_theme = "azure_default"
+	var/tgui_pref = TRUE
 	var/windowflashing = TRUE
 	var/db_flags
 	var/toggles = TOGGLES_DEFAULT
@@ -136,6 +138,14 @@ GLOBAL_LIST_INIT(name_adjustments, list())
 
 	var/ooc_notes
 	var/ooc_notes_display
+	var/rumour
+	var/noble_gossip
+	var/nsfwflavortext
+	var/erpprefs
+	var/song_artist
+	var/song_title
+	var/list/img_gallery = list()
+	var/list/nsfw_img_gallery = list()
 
 	/// The species this character is.
 	var/datum/species/pref_species = new /datum/species/human/northern() //Mutant race
@@ -358,6 +368,9 @@ GLOBAL_LIST_INIT(name_adjustments, list())
 	// ANOTHA ROW
 	dat += "<tr style='padding-top: 0px;padding-bottom:0px'>"
 	dat += "<td style='width:33%;text-align:left'>"
+	dat += "<a href='?_src_=prefs;preference=tgui_ui_prefs;task=menu'>[tgui_pref ? "TGUI" : "Legacy"]</a>"
+	dat += "<br>"
+	dat += "<a href='?_src_=prefs;preference=tgui_theme'>Theme: [get_tgui_theme_display_name()]</a>"
 	dat += "</td>"
 
 	dat += "<td style='width:33%;text-align:center'>"
@@ -479,9 +492,18 @@ GLOBAL_LIST_INIT(name_adjustments, list())
 		dat += "<br><img src='[nsfw_headshot_link]' width='125px' height='175px'>"
 
 	dat += "<br><b>[(length(flavortext) < MINIMUM_FLAVOR_TEXT) ? "<font color = '#802929'>" : ""]Flavortext:[(length(flavortext) < MINIMUM_FLAVOR_TEXT) ? "</font>" : ""]</b><a href='?_src_=prefs;preference=formathelp;task=input'>(?)</a><a href='?_src_=prefs;preference=flavortext;task=input'>Change</a>"
+	dat += "<br><b>NSFW Flavortext:</b><a href='?_src_=prefs;preference=formathelp;task=input'>(?)</a><a href='?_src_=prefs;preference=nsfwflavortext;task=input'>Change</a>"
 
 	dat += "<br><b>[(length(ooc_notes) < MINIMUM_OOC_NOTES) ? "<font color = '#802929'>" : ""]OOC Notes:[(length(ooc_notes) < MINIMUM_OOC_NOTES) ? "</font>" : ""]</b><a href='?_src_=prefs;preference=formathelp;task=input'>(?)</a><a href='?_src_=prefs;preference=ooc_notes;task=input'>Change</a>"
-	dat += "<br><b>OOC Extra:</b> <a href='?_src_=prefs;preference=ooc_extra;task=input'>Change</a>"
+	dat += "<br><b>Rumours & Noble Gossip:</b><a href='?_src_=prefs;preference=formathelp;task=input'>(?)</a><br><a href='?_src_=prefs;preference=rumour;task=input'>Set Rumours</a><a href='?_src_=prefs;preference=gossip;task=input'>Set Gossip</a><a href='?_src_=prefs;preference=rumour_preview;task=input'><i>Preview</i></a>"
+	dat += "<br><b>ERP Preferences:</b><a href='?_src_=prefs;preference=formathelp;task=input'>(?)</a><a href='?_src_=prefs;preference=erpprefs;task=input'>Change</a>"
+	dat += "<br><b>Song:</b> <a href='?_src_=prefs;preference=ooc_extra;task=input'>Change URL</a>"
+	dat += "<a href='?_src_=prefs;preference=change_title;task=input'>Change Title</a>"
+	dat += "<a href='?_src_=prefs;preference=change_artist;task=input'>Change Artist</a>"
+	dat += "<br><b>Image Gallery:</b> <a href='?_src_=prefs;preference=img_gallery;task=input'>Add</a>"
+	dat+= "<a href='?_src_=prefs;preference=clear_gallery;task=input'>Clear Gallery</a>"
+	dat += "<br><b>Nsfw Image Gallery:</b> <a href='?_src_=prefs;preference=nsfw_img_gallery;task=input'>Add</a>"
+	dat+= "<a href='?_src_=prefs;preference=clear_nsfw_gallery;task=input'>Clear Nsfw Gallery</a>"
 	dat += "<br><a href='?_src_=prefs;preference=ooc_preview;task=input' style='margin: 0; padding: 0;'><b>Preview Examine</b></a>"
 
 	dat += "<br><b>Loadout Item I:</b> <a href='?_src_=prefs;preference=loadout_item;loadout_number=1;task=input'>[loadout1 ? loadout1.name : "None"]</a>"
@@ -1534,7 +1556,7 @@ GLOBAL_LIST_INIT(name_adjustments, list())
 
 				if("flavortext")
 					to_chat(user, span_notice("["<span class='bold'>Flavortext should not include nonphysical nonsensory attributes such as backstory or the character's internal thoughts. NSFW descriptions are prohibited.</span>"]"))
-					var/new_flavortext = input(user, "Input your character description", "DESCRIBE YOURSELF", flavortext) as message|null // browser_input_text sanitizes in the box itself, which makes it look kind of ugly when editing A LOT of FTs
+					var/new_flavortext = tgui_input_text(user, "Input your character description:", "DESCRIBE YOURSELF", flavortext, multiline = TRUE, encode = FALSE, bigmodal = TRUE)
 					if(new_flavortext == null)
 						return
 					if(new_flavortext == "")
@@ -1549,6 +1571,18 @@ GLOBAL_LIST_INIT(name_adjustments, list())
 					flavortext_display = ft
 					to_chat(user, span_notice("Successfully updated flavortext"))
 					log_game("[user] has set their flavortext'.")
+				if("nsfwflavortext")
+					to_chat(user, "<span class='notice'>["<span class='bold'>NSFW Flavortext can be used for explicit physical descriptions.</span>"]</span>")
+					var/new_nsfwflavortext = tgui_input_text(user, "Input your character description:", "NSFW Flavortext", nsfwflavortext, multiline = TRUE, encode = FALSE, bigmodal = TRUE)
+					if(new_nsfwflavortext == null)
+						return
+					if(new_nsfwflavortext == "")
+						nsfwflavortext = null
+						ShowChoices(user)
+						return
+					nsfwflavortext = new_nsfwflavortext
+					to_chat(user, "<span class='notice'>Successfully updated NSFW flavortext.</span>")
+					log_game("[user] has set their NSFW flavortext.")
 				if("nsfw_headshot")
 					to_chat(user, "<span class='notice'>Finally a place to show it all.</span>")
 					var/new_nsfw_headshot_link = input(user, "Input the nsfw headshot link (https, hosts: gyazo, lensdump, imgbox, catbox):", "NSFW Headshot", nsfw_headshot_link) as text|null
@@ -1568,7 +1602,7 @@ GLOBAL_LIST_INIT(name_adjustments, list())
 
 				if("ooc_notes")
 					to_chat(user, span_notice("["<span class='bold'>Do not put anything NSFW here. This feature is for stuff that wouldn't fit in the flavortext.</span>"]"))
-					var/new_ooc_notes = input(user, "Input your OOC preferences:", "OOC notes", ooc_notes) as message|null
+					var/new_ooc_notes = tgui_input_text(user, "Input your OOC preferences:", "OOC notes", ooc_notes, multiline = TRUE, encode = FALSE, bigmodal = TRUE)
 					if(new_ooc_notes == null)
 						return
 					if(new_ooc_notes == "")
@@ -1584,78 +1618,172 @@ GLOBAL_LIST_INIT(name_adjustments, list())
 					ooc_notes_display = ooc
 					to_chat(user, span_notice("Successfully updated OOC notes."))
 					log_game("[user] has set their OOC notes'.")
+				if("rumour")
+					to_chat(user, span_notice("Rumours are things others might know, or think they know about you, and do not need to be true. Avoid explicit bodily descriptions."))
+					var/new_rumour = tgui_input_text(user, "Input rumours about your character: (400 Character Limit)", "Rumours", rumour, multiline = TRUE, encode = FALSE, bigmodal = TRUE)
+					if(new_rumour == null)
+						return
+					if(new_rumour == "")
+						rumour = null
+						ShowChoices(user)
+						return
+					if(length(new_rumour) > 400)
+						to_chat(user, span_warning("Rumours cannot exceed 400 characters."))
+						return
+					rumour = new_rumour
+					to_chat(user, span_notice("Successfully updated Rumours."))
+					log_game("[user] has set their rumour'.")
+				if("gossip")
+					to_chat(user, span_notice("Gossip is rumours shared among nobles. Avoid explicit bodily descriptions."))
+					var/new_gossip = tgui_input_text(user, "Input noble gossip about your character: (400 Character Limit)", "Noble Gossip", noble_gossip, multiline = TRUE, encode = FALSE, bigmodal = TRUE)
+					if(new_gossip == null)
+						return
+					if(new_gossip == "")
+						noble_gossip = null
+						ShowChoices(user)
+						return
+					if(length(new_gossip) > 400)
+						to_chat(user, span_warning("Noble gossip cannot exceed 400 characters."))
+						return
+					noble_gossip = new_gossip
+					to_chat(user, span_notice("Successfully updated Noble Gossip."))
+					log_game("[user] has set their noble gossip'.")
+				if("erpprefs")
+					to_chat(user, span_notice("Set your ERP preferences and limits."))
+					var/new_erpprefs = tgui_input_text(user, "Input your ERP preferences:", "ERP Preferences", erpprefs, multiline = TRUE, encode = FALSE, bigmodal = TRUE)
+					if(new_erpprefs == null)
+						return
+					if(new_erpprefs == "")
+						erpprefs = null
+						ShowChoices(user)
+						return
+					erpprefs = new_erpprefs
+					to_chat(user, span_notice("Successfully updated ERP preferences."))
+					log_game("[user] has set their ERP preferences.")
+				if("img_gallery")
+					if(!islist(img_gallery))
+						img_gallery = list()
+					if(img_gallery.len >= 3)
+						to_chat(user, "You already have three images in your gallery!")
+						return
+					to_chat(user, "<span class='notice'>You can only have a maximum of ["<span class='bold'>THREE IMAGES</span>"] in your gallery at a time.</span>")
+					var/new_galleryimg = tgui_input_text(user, "Input the image link (https, hosts: gyazo, discord, lensdump, imgbox, catbox):", "Gallery Image", encode = FALSE)
+					if(new_galleryimg == null)
+						return
+					if(new_galleryimg == "")
+						ShowChoices(user)
+						return
+					if(!is_valid_headshot_link(user, new_galleryimg))
+						to_chat(user, "<span class='notice'>Invalid image link. Make sure it's a direct link from a valid host.</span>")
+						return
+					img_gallery += new_galleryimg
+					to_chat(user, "<span class='notice'>Successfully added image to gallery.</span>")
+					log_game("[user] has added an image to their gallery: '[new_galleryimg]'.")
+				if("nsfw_img_gallery")
+					if(!islist(nsfw_img_gallery))
+						nsfw_img_gallery = list()
+					if(nsfw_img_gallery.len >= 3)
+						to_chat(user, "You already have three images in your gallery!")
+						return
+					to_chat(user, "<span class='notice'>You can only have a maximum of ["<span class='bold'>THREE IMAGES</span>"] in your gallery at a time.</span>")
+					var/new_galleryimg = tgui_input_text(user, "Input the image link (https, hosts: gyazo, discord, lensdump, imgbox, catbox):", "Gallery Image", encode = FALSE)
+					if(new_galleryimg == null)
+						return
+					if(new_galleryimg == "")
+						ShowChoices(user)
+						return
+					if(!is_valid_headshot_link(user, new_galleryimg))
+						to_chat(user, "<span class='notice'>Invalid image link. Make sure it's a direct link from a valid host.</span>")
+						return
+					nsfw_img_gallery += new_galleryimg
+					to_chat(user, "<span class='notice'>Successfully added image to nsfw gallery.</span>")
+					log_game("[user] has added an image to their nsfw gallery: '[new_galleryimg]'.")
+				if("clear_gallery")
+					if(!img_gallery.len)
+						to_chat(user, "You don't have any images in your gallery to clear!")
+						return
+					var/dachoice = tgui_alert(user, "Do you really want to clear your image gallery?", "Clear Gallery", list("Yae", "Nae"))
+					if(dachoice == "Nae")
+						ShowChoices(user)
+						return
+					img_gallery = list()
+					to_chat(user, "<span class='notice'>Successfully cleared image gallery.</span>")
+					log_game("[user] has cleared their image gallery.")
+				if("clear_nsfw_gallery")
+					if(!nsfw_img_gallery.len)
+						to_chat(user, "You don't have any images in your nsfw gallery to clear!")
+						return
+					var/dachoice = tgui_alert(user, "Do you really want to clear your nsfw image gallery?", "Clear nsfw Gallery", list("Yae", "Nae"))
+					if(dachoice == "Nae")
+						ShowChoices(user)
+						return
+					nsfw_img_gallery = list()
+					to_chat(user, "<span class='notice'>Successfully cleared their nsfw image gallery.</span>")
+					log_game("[user] has cleared their nsfw image gallery.")
 				if("ooc_preview")
-					var/list/dat = list()
-					if(is_valid_headshot_link(null, headshot_link, TRUE))
-						dat += ("<div align='center'><img src='[headshot_link]' width='350px' height='350px'></div>")
-					if(flavortext && flavortext_display)
-						dat += "<div align='left' style='line-height: 1.2;'>[flavortext_display]</div>"
-					if(ooc_notes && ooc_notes_display)
-						dat += "<br>"
-						dat += "<div align='center'><b>OOC notes</b></div>"
-						dat += "<div align='left' style='line-height: 1.2;'>[ooc_notes_display]</div>"
-					if(is_valid_nsfw_headshot_link(null, nsfw_headshot_link, TRUE))
-						dat += "<br><div align='center'><b>NSFW</b></div>"
-						dat += ("<br><div align='center'><img src='[nsfw_headshot_link]' width='350px' height='350px'></div>")
-					if(ooc_extra)
-						dat += "[ooc_extra]"
-					var/datum/browser/popup = new(user, "[real_name]", "<center>[real_name]</center>", width = 480, height = 700)
-					popup.set_content(dat.Join())
-					popup.open(FALSE)
+					var/datum/examine_panel/preview_examine_panel = new(user)
+					preview_examine_panel.pref = src
+					preview_examine_panel.holder = user
+					preview_examine_panel.viewing = user
+					preview_examine_panel.ui_interact(user)
+				if("rumour_preview")
+					var/msg = ""
+					if(rumour && length(rumour))
+						var/rumour_display = rumour
+						rumour_display = html_encode(rumour_display)
+						rumour_display = parsemarkdown_basic(rumour_display, hyperlink = TRUE)
+						msg += "<b>You recall what you heard around Town about [real_name]...</b><br>[rumour_display]"
+					if(length(noble_gossip))
+						if(msg)
+							msg += "<br><br>"
+						var/gossip_display = noble_gossip
+						gossip_display = html_encode(gossip_display)
+						gossip_display = parsemarkdown_basic(gossip_display, hyperlink = TRUE)
+						msg += "<b>You recall what the other Blue-bloods hushed about [real_name]...</b><br>[gossip_display]"
+					if(msg)
+						to_chat(user, "<span class='info'>[msg]</span>")
 				if("ooc_extra")
-					to_chat(user, span_notice("Add a link from a suitable host (catbox, etc) to an mp3, mp4, or jpg / png file to have it embed at the bottom of your OOC notes."))
-					to_chat(user, span_notice("If the link doesn't show up properly in-game, ensure that it's a direct link that opens properly in a browser."))
-					to_chat(user, span_notice("Videos will be shrunk to a ~300x300 square. Keep this in mind."))
-					to_chat(user, "<font color = '#d6d6d6'>Leave a single space to delete it from your OOC notes.</font>")
+					to_chat(user, "<span class='notice'>Add a link from a suitable host (catbox, etc) to an mp3 to embed in your flavor text.</span>")
+					to_chat(user, "<span class='notice'>If the song doesn't play properly, ensure that it's a direct link that opens properly in a browser.</span>")
+					to_chat(user, "<font color = '#d6d6d6'>Leave blank to clear your current song.</font>")
 					to_chat(user, "<font color ='red'>Abuse of this will get you banned.</font>")
-					var/new_extra_link = input(user, "Input the accessory link (https, hosts: gyazo, discord, lensdump, imgbox, catbox):", "OOC Extra", ooc_extra_link) as text|null
+					var/new_extra_link = tgui_input_text(user, "Input the accessory link (https, hosts: discord, catbox):", "Song URL", ooc_extra, encode = FALSE)
 					if(new_extra_link == null)
 						return
 					if(new_extra_link == "")
 						new_extra_link = null
+						ooc_extra = null
+						to_chat(user, "<span class='notice'>Successfully deleted OOC Extra.</span>")
 						ShowChoices(user)
 						return
-					if(new_extra_link == " ")	//Single space to delete
-						ooc_extra_link = null
-						ooc_extra = null
-						to_chat(user, span_notice("Successfully deleted OOC Extra."))
-					var/static/list/valid_extensions = list("jpg", "png", "jpeg", "gif", "mp4", "mp3")
+					var/static/list/valid_extensions = list("mp3")
 					if(!is_valid_headshot_link(user, new_extra_link, FALSE, valid_extensions))
 						new_extra_link = null
 						ShowChoices(user)
 						return
-
-					var/list/value_split = splittext(new_extra_link, ".")
-
-					// extension will always be the last entry
-					var/extension = value_split[length(value_split)]
-					var/info
-					if(extension in valid_extensions)
-						ooc_extra_link = new_extra_link
-						ooc_extra = null
-						ooc_extra = "<div align ='center'><center>"
-						if(extension == "jpg" || extension == "png" || extension == "jpeg" || extension == "gif")
-							ooc_extra += "<br>"
-							ooc_extra += "<img src='[ooc_extra_link]'/>"
-							info = "an embedded image."
-						else
-							switch(extension)
-								if("mp4")
-									ooc_extra = "<br>"
-									ooc_extra += "<video width=["288"] height=["288"] controls=["true"]>"
-									ooc_extra += "<source src='[ooc_extra_link]' type=["video/mp4"]>"
-									ooc_extra += "</video>"
-									info = "a video."
-								if("mp3")
-									ooc_extra = "<br>"
-									ooc_extra += "<audio controls>"
-									ooc_extra += "<source src='[ooc_extra_link]' type=["audio/mp3"]>"
-									ooc_extra += "Your browser does not support the audio element."
-									ooc_extra += "</audio>"
-									info = "embedded audio."
-						ooc_extra += "</center></div>"
-						to_chat(user, span_notice("Successfully updated OOC Extra with [info]"))
-						log_game("[user] has set their OOC Extra to '[ooc_extra_link]'.")
+					ooc_extra = new_extra_link
+					to_chat(user, "<span class='notice'>Successfully updated Song URL.</span>")
+					log_game("[user] has set their Song URL to '[ooc_extra]'.")
+				if("change_artist")
+					var/new_artist = tgui_input_text(user, "Input your song's artist:", "Song Artist", song_artist, encode = FALSE)
+					if(new_artist == null)
+						return
+					if(new_artist == "")
+						ShowChoices(user)
+						return
+					song_artist = new_artist
+					to_chat(user, "<span class='notice'>Successfully updated song artist.</span>")
+					log_game("[user] has set their song artist.")
+				if("change_title")
+					var/new_title = tgui_input_text(user, "Input your song's title:", "Song title", song_title, encode = FALSE)
+					if(new_title == null)
+						return
+					if(new_title == "")
+						ShowChoices(user)
+						return
+					song_title = new_title
+					to_chat(user, "<span class='notice'>Successfully updated song title.</span>")
+					log_game("[user] has set their song title.")
 				if("s_tone")
 					var/listy = pref_species.get_skin_list()
 					var/new_s_tone = browser_input_list(user, "CHOOSE YOUR HERO'S [uppertext(pref_species.skin_tone_wording)]", "THE SUN", listy)
@@ -1806,6 +1934,10 @@ GLOBAL_LIST_INIT(name_adjustments, list())
 					tgui_fancy = !tgui_fancy
 				if("tgui_lock")
 					tgui_lock = !tgui_lock
+				if("tgui_ui_prefs")
+					tgui_pref = !tgui_pref
+				if("tgui_theme")
+					setTguiStyle(user)
 				if("winflash")
 					windowflashing = !windowflashing
 
@@ -2067,8 +2199,16 @@ GLOBAL_LIST_INIT(name_adjustments, list())
 	character.flavortext_display = flavortext_display
 	character.ooc_notes = ooc_notes
 	character.ooc_notes_display = ooc_notes_display
+	character.rumour = rumour
+	character.noble_gossip = noble_gossip
+	character.nsfwflavortext = nsfwflavortext
+	character.erpprefs = erpprefs
+	character.img_gallery = img_gallery
+	character.nsfw_img_gallery = nsfw_img_gallery
 	character.ooc_extra_link = ooc_extra_link
 	character.ooc_extra = ooc_extra
+	character.song_title = song_title
+	character.song_artist = song_artist
 	character.pronouns = pronouns
 	character.voice_type = voice_type
 
