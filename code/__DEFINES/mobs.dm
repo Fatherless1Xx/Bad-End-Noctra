@@ -27,6 +27,10 @@
 #define MOVE_INTENT_RUN  "run"
 #define MOVE_INTENT_SNEAK "sneak"
 
+// Grab pixel shift offsets
+#define GRAB_PIXEL_SHIFT_PASSIVE 6
+#define GRAB_PIXEL_SHIFT_AGGRESSIVE 12
+
 //resist
 #define RESIST_INTENT 0
 #define SUBMIT_INTENT 1

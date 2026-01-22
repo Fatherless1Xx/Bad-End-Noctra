@@ -273,3 +273,6 @@
 
 	restore_caster(TRUE)
 
+/datum/status_effect/shapechange_mob/die_with_form/werewolf
+	id = "werewolf_shapeshift_die_with_form"
+

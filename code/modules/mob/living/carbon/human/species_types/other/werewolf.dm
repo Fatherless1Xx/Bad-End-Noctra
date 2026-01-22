@@ -13,7 +13,8 @@
 /mob/living/carbon/human/species/werewolf/death(gibbed, nocutscene)
 	. = ..()
 	if(stored_mob)
-		werewolf_untransform(null, TRUE, gibbed)
+		var/datum/antagonist/werewolf/ww = stored_mob.mind?.has_antag_datum(/datum/antagonist/werewolf)
+		ww?.remove_werewolf(TRUE)
 
 /mob/living/carbon/human/species/werewolf/male
 	gender = MALE
@@ -146,6 +147,6 @@
 	return "WEREVOLF"
 
 /datum/species/werewolf/check_species_weakness(obj/item, mob/living/attacker, mob/living/parent)
-	if(parent.has_status_effect(/datum/status_effect/debuff/silver_curse))
+	if(parent.has_status_effect(/datum/status_effect/debuff/silver_bane))
 		return 0.75
 	return 0

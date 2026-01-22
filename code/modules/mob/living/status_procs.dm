@@ -563,6 +563,68 @@
 	else if(duration > 0)
 		apply_status_effect(effect, duration)
 
+#undef adjust_dizzy
+#undef set_dizzy
+#undef set_dizzy_if_lower
+#undef adjust_jitter
+#undef set_jitter
+#undef set_jitter_if_lower
+#undef adjust_confusion
+#undef set_confusion
+#undef set_confusion_if_lower
+#undef adjust_temp_blindness
+#undef set_temp_blindness
+#undef set_temp_blindness_if_lower
+
+/mob/living/proc/adjust_dizzy(duration)
+	return adjust_timed_status_effect(duration, /datum/status_effect/dizziness)
+
+/mob/living/proc/set_dizzy(duration)
+	return set_timed_status_effect(duration, /datum/status_effect/dizziness)
+
+/mob/living/proc/set_dizzy_if_lower(duration)
+	return set_timed_status_effect(duration, /datum/status_effect/dizziness, TRUE)
+
+/mob/living/proc/adjust_jitter(duration)
+	return adjust_timed_status_effect(duration, /datum/status_effect/jitter)
+
+/mob/living/proc/set_jitter(duration)
+	return set_timed_status_effect(duration, /datum/status_effect/jitter)
+
+/mob/living/proc/set_jitter_if_lower(duration)
+	return set_timed_status_effect(duration, /datum/status_effect/jitter, TRUE)
+
+/mob/living/proc/adjust_confusion(duration)
+	return adjust_timed_status_effect(duration, /datum/status_effect/confusion)
+
+/mob/living/proc/set_confusion(duration)
+	return set_timed_status_effect(duration, /datum/status_effect/confusion)
+
+/mob/living/proc/set_confusion_if_lower(duration)
+	return set_timed_status_effect(duration, /datum/status_effect/confusion, TRUE)
+
+/mob/living/proc/adjust_temp_blindness(duration)
+	return adjust_timed_status_effect(duration, /datum/status_effect/temporary_blindness)
+
+/mob/living/proc/set_temp_blindness(duration)
+	return set_timed_status_effect(duration, /datum/status_effect/temporary_blindness)
+
+/mob/living/proc/set_temp_blindness_if_lower(duration)
+	return set_timed_status_effect(duration, /datum/status_effect/temporary_blindness, TRUE)
+
+#define adjust_dizzy(duration) adjust_timed_status_effect(duration, /datum/status_effect/dizziness)
+#define set_dizzy(duration) set_timed_status_effect(duration, /datum/status_effect/dizziness)
+#define set_dizzy_if_lower(duration) set_timed_status_effect(duration, /datum/status_effect/dizziness, TRUE)
+#define adjust_jitter(duration) adjust_timed_status_effect(duration, /datum/status_effect/jitter)
+#define set_jitter(duration) set_timed_status_effect(duration, /datum/status_effect/jitter)
+#define set_jitter_if_lower(duration) set_timed_status_effect(duration, /datum/status_effect/jitter, TRUE)
+#define adjust_confusion(duration) adjust_timed_status_effect(duration, /datum/status_effect/confusion)
+#define set_confusion(duration) set_timed_status_effect(duration, /datum/status_effect/confusion)
+#define set_confusion_if_lower(duration) set_timed_status_effect(duration, /datum/status_effect/confusion, TRUE)
+#define adjust_temp_blindness(duration) adjust_timed_status_effect(duration, /datum/status_effect/temporary_blindness)
+#define set_temp_blindness(duration) set_timed_status_effect(duration, /datum/status_effect/temporary_blindness)
+#define set_temp_blindness_if_lower(duration) set_timed_status_effect(duration, /datum/status_effect/temporary_blindness, TRUE)
+
 /**
  * Gets how many deciseconds are remaining in
  * the duration of the passed status effect on this mob.

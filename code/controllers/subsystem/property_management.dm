@@ -10,9 +10,13 @@
 	var/template_y
 	var/template_z
 
-/obj/effect/landmark/house_spot/New(loc, ...)
+/obj/effect/landmark/house_spot/Initialize(mapload)
 	. = ..()
 	SShousing.properties |= src
+
+/obj/effect/landmark/house_spot/Destroy(force)
+	default_template = null
+	return ..()
 
 SUBSYSTEM_DEF(housing)
 	name = "Housing"

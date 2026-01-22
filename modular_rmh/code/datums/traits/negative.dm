@@ -306,3 +306,79 @@
 	SIGNAL_HANDLER
 	examine_list += span_info("\nThey have a submissive aura about them.")*/
 
+// Vice quirks (addictions handled via quirks)
+/datum/quirk/vice
+	abstract_type = /datum/quirk/vice
+	value = -2
+	var/next_sate = 0
+	var/sated = TRUE
+	var/time = 5 MINUTES
+	var/debuff = /datum/status_effect/debuff/addiction
+	var/needsate_text
+	var/sated_text = "That's much better..."
+	var/unsate_time
+
+/datum/quirk/vice/New(mob/living/quirk_mob, spawn_effects)
+	..()
+	if(QDELETED(src))
+		return
+	next_sate = world.time + rand(10 MINUTES, 20 MINUTES)
+
+/datum/quirk/vice/proc/sate()
+	var/mob/living/carbon/human/H = quirk_holder
+	if(!H)
+		return
+	H.remove_stress(list(/datum/stress_event/vice1,/datum/stress_event/vice2,/datum/stress_event/vice3))
+	if(!sated)
+		to_chat(H, span_blue(sated_text))
+	sated = TRUE
+	next_sate = world.time + time + rand(-1 MINUTES, 1 MINUTES)
+	if(debuff)
+		H.remove_status_effect(debuff)
+
+/datum/quirk/vice/on_process()
+	if(!ishuman(quirk_holder))
+		return
+	var/mob/living/carbon/human/H = quirk_holder
+	if(H.mind?.antag_datums)
+		for(var/datum/antagonist/D in H.mind?.antag_datums)
+			if(istype(D, /datum/antagonist/vampire) || istype(D, /datum/antagonist/werewolf) || istype(D, /datum/antagonist/skeleton) || istype(D, /datum/antagonist/zombie))
+				return
+	var/oldsated = sated
+	if(oldsated && next_sate && world.time > next_sate)
+		sated = FALSE
+	if(sated != oldsated)
+		unsate_time = world.time
+		if(needsate_text)
+			to_chat(H, span_boldwarning("[needsate_text]"))
+	if(!sated)
+		switch(world.time - unsate_time)
+			if(0 to 5 MINUTES)
+				H.add_stress(/datum/stress_event/vice1)
+				H.remove_stress(/datum/stress_event/vice2)
+				H.remove_stress(/datum/stress_event/vice3)
+			if(5 MINUTES to 15 MINUTES)
+				H.add_stress(/datum/stress_event/vice2)
+				H.remove_stress(/datum/stress_event/vice1)
+				H.remove_stress(/datum/stress_event/vice3)
+			if(15 MINUTES to INFINITY)
+				H.add_stress(/datum/stress_event/vice3)
+				H.remove_stress(/datum/stress_event/vice1)
+				H.remove_stress(/datum/stress_event/vice2)
+		if(debuff)
+			H.apply_status_effect(debuff)
+
+/datum/quirk/vice/alcoholic
+	name = "Alcoholic"
+	desc = "Drinking alcohol is my favorite thing."
+	value = -1
+	time = 40 MINUTES
+	needsate_text = "Time for a drink."
+
+/datum/quirk/vice/junkie
+	name = "Junkie"
+	desc = "I need a real high to take the pain of this rotten world away."
+	value = -2
+	time = 50 MINUTES
+	needsate_text = "Time to reach a new high."
+

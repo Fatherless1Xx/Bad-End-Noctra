@@ -150,7 +150,7 @@ GLOBAL_LIST_INIT(ritualslist, build_zizo_rituals())
 	if(!target)
 		return
 	if(target.mob_biotypes & MOB_UNDEAD)
-		to_chat(user, span_warning("The fruits of his work prevent me from changing my appearance..."))
+		to_chat(user, span_warning("The fruits of her work prevent me from changing my appearance..."))
 		return
 	target.randomize_human_appearance()
 	target.regenerate_clothes()
@@ -188,7 +188,7 @@ GLOBAL_LIST_INIT(ritualslist, build_zizo_rituals())
 	target.Stun(10 SECONDS)
 	if(iscarbon(target))
 		var/mob/living/carbon/carbon_target = target
-		carbon_target.silent += 30
+		carbon_target.adjust_silence(30 SECONDS)
 	qdel(src)
 
 /datum/ritual/servantry/darksunmark
@@ -335,7 +335,7 @@ GLOBAL_LIST_INIT(ritualslist, build_zizo_rituals())
 
 	new /obj/item/rope/chain(center)
 
-	playsound(get_turf(center), pick('sound/items/bsmith1.ogg','sound/items/bsmith2.ogg','sound/items/bsmith3.ogg','sound/items/bsmith4.ogg'), 100, FALSE)
+	playsound(center, pick('sound/items/bsmith1.ogg','sound/items/bsmith2.ogg','sound/items/bsmith3.ogg','sound/items/bsmith4.ogg'), 100, FALSE)
 
 /datum/ritual/transmutation/summonneant
 	name = "Summon Neant"
@@ -356,7 +356,7 @@ GLOBAL_LIST_INIT(ritualslist, build_zizo_rituals())
 
 	new /obj/item/weapon/polearm/neant(center)
 
-	playsound(get_turf(center), pick('sound/items/bsmith1.ogg','sound/items/bsmith2.ogg','sound/items/bsmith3.ogg','sound/items/bsmith4.ogg'), 100, FALSE)
+	playsound(center, pick('sound/items/bsmith1.ogg','sound/items/bsmith2.ogg','sound/items/bsmith3.ogg','sound/items/bsmith4.ogg'), 100, FALSE)
 
 /datum/ritual/transmutation/summonarmor
 	name = "Summon Darksteel Armor"
@@ -386,7 +386,7 @@ GLOBAL_LIST_INIT(ritualslist, build_zizo_rituals())
 
 	new /obj/item/clothing/gloves/plate/zizo(center)
 
-	playsound(get_turf(center), pick('sound/items/bsmith1.ogg','sound/items/bsmith2.ogg','sound/items/bsmith3.ogg','sound/items/bsmith4.ogg'), 100, FALSE)
+	playsound(center, pick('sound/items/bsmith1.ogg','sound/items/bsmith2.ogg','sound/items/bsmith3.ogg','sound/items/bsmith4.ogg'), 100, FALSE)
 
 /datum/ritual/transmutation/summonweapon
 	name = "Summon Weapons"
@@ -405,7 +405,7 @@ GLOBAL_LIST_INIT(ritualslist, build_zizo_rituals())
 
 	new /obj/item/weapon/mace/steel(center)
 
-	playsound(get_turf(center), pick('sound/items/bsmith1.ogg','sound/items/bsmith2.ogg','sound/items/bsmith3.ogg','sound/items/bsmith4.ogg'), 100, FALSE)
+	playsound(center, pick('sound/items/bsmith1.ogg','sound/items/bsmith2.ogg','sound/items/bsmith3.ogg','sound/items/bsmith4.ogg'), 100, FALSE)
 
 // FLESH CRAFTING
 /datum/ritual/fleshcrafting
@@ -678,7 +678,7 @@ GLOBAL_LIST_INIT(ritualslist, build_zizo_rituals())
 	RULER.gib()
 	SSmapping.retainer.cult_ascended = TRUE
 	addomen(OMEN_ASCEND)
-	to_chat(cultist, span_userdanger("I HAVE DONE IT! I HAVE REACHED A HIGHER FORM! ZIZO SMILES UPON ME WITH MALICE IN HIS EYES TOWARD THE ONES WHO LACK KNOWLEDGE AND UNDERSTANDING!"))
+	to_chat(cultist, span_userdanger("I HAVE DONE IT! I HAVE REACHED A HIGHER FORM! ZIZO SMILES UPON ME WITH MALICE IN HER EYES TOWARD THE ONES WHO LACK KNOWLEDGE AND UNDERSTANDING!"))
 	var/mob/living/trl = new /mob/living/simple_animal/hostile/retaliate/blood/ascended(center)
 	cultist.mind?.transfer_to(trl)
 	cultist.gib()
