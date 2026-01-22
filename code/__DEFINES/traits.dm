@@ -396,6 +396,7 @@ Remember to update _globalvars/traits.dm if you're adding/removing/renaming trai
 #define TRAIT_MEDIUMARMOR				"Mail Training"
 #define TRAIT_HEAVYARMOR				"Plate Training"
 #define TRAIT_DODGEEXPERT              "Fast Reflexes"
+#define TRAIT_WHISPERCASTER				"Whisper Caster"
 #define TRAIT_UNDODGING					"Unyielding"
 #define TRAIT_UNPARRYING				"Graceless"
 #define TRAIT_DECEIVING_MEEKNESS 		"Deceiving Meekness"
