@@ -68,5 +68,6 @@
 
 	shirt = /obj/item/clothing/shirt/exoticsilkbra
 	belt = /obj/item/storage/belt/leather/exoticsilkbelt
+	beltl = /obj/item/key/shops/shop1
 	shoes = /obj/item/clothing/shoes/anklets
 	neck = /obj/item/clothing/neck/slave_collar/female
