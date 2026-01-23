@@ -16,6 +16,7 @@
 
 	grid_width = 32
 	grid_height = 32
+	var/amount = 1
 	/// Amount of uses left
 	var/stringamt = 24
 	var/maxstring = 24

@@ -20,6 +20,7 @@
 
 /obj/item/clothing/shirt/tunic/colored
 	misc_flags = CRAFTING_TEST_EXCLUDE
+	var/amount = 1
 
 /obj/item/clothing/shirt/tunic/colored/green
 	color = CLOTHING_FOREST_GREEN

@@ -58,6 +58,13 @@
 
 	var/icon_render_key = ""
 	var/static/list/limb_icon_cache = list()
+	/// Bitflags for pending icon updates - batched at end of tick
+	var/pending_icon_updates = NONE
+	var/icon_update_scheduled_time = 0
+	/// Cached key for damage overlay state - invalidated when damage state changes
+	var/damage_overlay_cache_key
+	/// Cached key for body overlay state - invalidated when body state changes
+	var/body_overlay_cache_key
 
 	//halucination vars
 	var/image/halimage

@@ -67,6 +67,14 @@ DEFINE_BITFIELD(smoothing_junction, list(
 
 	// cache for sanic speed
 	var/smoothing_list = src.smoothing_list
+	if(smoothing_list && !islist(smoothing_list))
+		if(istext(smoothing_list))
+			src.smoothing_list = smoothing_list
+			SET_SMOOTHING_GROUPS(src.smoothing_list)
+			smoothing_list = src.smoothing_list
+		else
+			src.smoothing_list = null
+			smoothing_list = null
 
 	var/smooth_border = (smoothing_flags & SMOOTH_BORDER)
 	var/smooth_obj = (smoothing_flags & SMOOTH_OBJ)
@@ -98,6 +106,15 @@ DEFINE_BITFIELD(smoothing_junction, list(
 							continue; \
 						}; \
 						var/thing_smoothing_groups = thing.smoothing_groups; \
+						if(thing_smoothing_groups && !islist(thing_smoothing_groups)) { \
+							if(istext(thing_smoothing_groups)) { \
+								thing.smoothing_groups = thing_smoothing_groups; \
+								SET_SMOOTHING_GROUPS(thing.smoothing_groups); \
+								thing_smoothing_groups = thing.smoothing_groups; \
+							} else { \
+								thing_smoothing_groups = null; \
+							}; \
+						}; \
 						if(!thing_smoothing_groups) { \
 							continue; \
 						}; \
@@ -115,11 +132,20 @@ DEFINE_BITFIELD(smoothing_junction, list(
 					}; \
 					break set_adj_in_dir; \
 				}; \
-				var/neighbor_smoothing_groups = neighbor.smoothing_groups; \
-				if(neighbor_smoothing_groups) { \
-					for(var/target as anything in smoothing_list) { \
-						if(smoothing_list[target] & neighbor_smoothing_groups[target]) { \
-							new_junction |= direction_flag; \
+					var/neighbor_smoothing_groups = neighbor.smoothing_groups; \
+					if(neighbor_smoothing_groups && !islist(neighbor_smoothing_groups)) { \
+						if(istext(neighbor_smoothing_groups)) { \
+							neighbor.smoothing_groups = neighbor_smoothing_groups; \
+							SET_SMOOTHING_GROUPS(neighbor.smoothing_groups); \
+							neighbor_smoothing_groups = neighbor.smoothing_groups; \
+						} else { \
+							neighbor_smoothing_groups = null; \
+						}; \
+					}; \
+					if(neighbor_smoothing_groups) { \
+						for(var/target as anything in smoothing_list) { \
+							if(smoothing_list[target] & neighbor_smoothing_groups[target]) { \
+								new_junction |= direction_flag; \
 							break set_adj_in_dir; \
 						}; \
 					}; \

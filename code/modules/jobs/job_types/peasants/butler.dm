@@ -121,6 +121,7 @@
 
 /datum/outfit/butler
 	name = "Butler"
+	neck = /obj/item/clothing/neck/slave_collar/female
 	shoes = /obj/item/clothing/shoes/nobleboot
 	beltr = /obj/item/storage/keyring/captain
 	beltl = /obj/item/storage/belt/pouch/coins/mid

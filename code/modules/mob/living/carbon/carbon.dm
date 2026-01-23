@@ -365,19 +365,40 @@
 
 /mob/living/carbon/resist_leash()
 	if(!has_status_effect(/datum/status_effect/leash_pet))
-		return
+		return FALSE
 	to_chat(src, span_notice("I reach for the hook on my collar..."))
 	var/deleash = 5 SECONDS
 	if(handcuffed)
 		deleash = 20 SECONDS
 	if(do_after(src, deleash, target = src))
 		if(QDELETED(src))
-			return
+			return FALSE
+		var/datum/component/leash/leash_component = GetComponent(/datum/component/leash)
+		var/obj/item/leash/leash_item
+		if(leash_component && istype(leash_component.owner, /obj/item/leash))
+			leash_item = leash_component.owner
+		if(leash_item)
+			if(leash_item.leash_master)
+				UnregisterSignal(leash_item.leash_master, COMSIG_MOVABLE_MOVED)
+				leash_item.leash_master.remove_status_effect(/datum/status_effect/leash_owner)
+			UnregisterSignal(src, COMSIG_MOVABLE_MOVED)
+			UnregisterSignal(src, COMSIG_PARENT_EXAMINE)
+			leash_item.leash_freepet = null
+			leash_item.leash_master = null
+			leash_item.leash_pet = null
+			leash_item.leashed = FALSE
+		if(leash_component)
+			leash_component.remove_leash()
 		to_chat(src, "<span class='warning'>[src] has removed their leash!</span>")
 		remove_status_effect(/datum/status_effect/leash_pet)
+		remove_status_effect(/datum/status_effect/leash_freepet)
+		return TRUE
 	return
 
 /mob/living/carbon/resist_restraints()
+	if(has_status_effect(/datum/status_effect/leash_pet))
+		resist_leash()
+		return
 	var/obj/item/I = null
 	var/type = 0
 	if(handcuffed)

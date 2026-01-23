@@ -82,10 +82,44 @@ GLOBAL_PROTECT(no_child_icons)
 /mob/living/carbon/human/update_damage_overlays()
 	START_PROCESSING(SSdamoverlays,src)
 
+/// Generates a cache key for current damage overlay state
+/mob/living/carbon/human/proc/generate_damage_overlay_key()
+	var/datum/species/species = dna?.species
+	var/use_female_sprites = MALE_SPRITES
+	if(species?.sexes)
+		if(gender == FEMALE && !species.swap_female_clothes || gender == MALE && species.swap_male_clothes || gender == MALE && species.swap_male_clothes_but_not_offsets)
+			use_female_sprites = FEMALE_SPRITES
+
+	var/key = "[gender]|[age]|[species?.type]|[use_female_sprites]|"
+	key += wear_armor?.flags_inv & HIDEBOOB ? "1" : "0"
+	key += wear_shirt?.flags_inv & HIDEBOOB ? "1" : "0"
+	key += cloak?.flags_inv & HIDEBOOB ? "1" : "0"
+	key += "|"
+
+	for(var/obj/item/bodypart/BP as anything in bodyparts)
+		var/bleed_rate = BP.get_bleed_rate()
+		key += "[BP.body_zone][BP.brutestate][BP.burnstate]"
+		key += BP.skeletonized ? "S" : "N"
+		key += bleed_rate ? "B" : "N"
+		key += "[length(BP.embedded_objects)]"
+		key += BP.bandage ? "b[BP.bandage.color]" : "n"
+		if(BP.wounds && length(BP.wounds))
+			for(var/datum/wound/wound as anything in BP.wounds)
+				if(wound?.mob_overlay)
+					key += wound.mob_overlay
+		key += "|"
+
+	return key
+
 /mob/living/carbon/human/proc/update_damage_overlays_real()
 	var/datum/species/species = dna?.species
 	if(species?.update_damage_overlays(src))
 		return
+
+	var/new_cache_key = generate_damage_overlay_key()
+	if(damage_overlay_cache_key == new_cache_key)
+		return
+	damage_overlay_cache_key = new_cache_key
 
 	remove_overlay(DAMAGE_LAYER)
 	remove_overlay(LEG_DAMAGE_LAYER)
@@ -122,125 +156,81 @@ GLOBAL_PROTECT(no_child_icons)
 	var/list/limb_overlaysa = list()
 	var/list/limb_overlaysb = list()
 	var/list/limb_overlaysc = list()
+	var/needs_body_update = FALSE
 	for(var/obj/item/bodypart/BP as anything in bodyparts)
 		var/list/damage_overlays = list()
 		var/list/legdam_overlays = list()
 		var/list/armdam_overlays = list()
 		if(BP.body_zone == BODY_ZONE_HEAD)
-			update_body()
+			needs_body_update = TRUE
+		var/used_offset = BP.offset
+		var/offset_x = 0
+		var/offset_y = 0
+		if(LAZYACCESS(offsets, used_offset))
+			offset_x = offsets[used_offset][1]
+			offset_y = offsets[used_offset][2]
 		var/bleed_checker = FALSE
 		var/list/wound_overlays
 		if(!BP.skeletonized)
 			if(BP.brutestate)
-				var/mutable_appearance/damage_overlay = mutable_appearance(limb_icon, "[BP.body_zone]_[BP.brutestate]0", -DAMAGE_LAYER)
-				damage_overlays += damage_overlay
-				var/mutable_appearance/legdam_overlay = mutable_appearance(limb_icon, "legdam_[BP.body_zone]_[BP.brutestate]0", -LEG_DAMAGE_LAYER)
-				legdam_overlays += legdam_overlay
-				var/mutable_appearance/armdam_overlay = mutable_appearance(limb_icon, "armdam_[BP.body_zone]_[BP.brutestate]0", -ARM_DAMAGE_LAYER)
-				armdam_overlays += armdam_overlay
+				damage_overlays += get_cached_damage_overlay(limb_icon, "[BP.body_zone]_[BP.brutestate]0", DAMAGE_LAYER, offset_x, offset_y)
+				legdam_overlays += get_cached_damage_overlay(limb_icon, "legdam_[BP.body_zone]_[BP.brutestate]0", LEG_DAMAGE_LAYER, offset_x, offset_y)
+				armdam_overlays += get_cached_damage_overlay(limb_icon, "armdam_[BP.body_zone]_[BP.brutestate]0", ARM_DAMAGE_LAYER, offset_x, offset_y)
 			if(BP.burnstate)
-				var/mutable_appearance/damage_overlay = mutable_appearance(limb_icon, "[BP.body_zone]_0[BP.burnstate]", -DAMAGE_LAYER)
-				damage_overlays += damage_overlay
-				var/mutable_appearance/legdam_overlay = mutable_appearance(limb_icon, "legdam_[BP.body_zone]_0[BP.burnstate]", -LEG_DAMAGE_LAYER)
-				legdam_overlays += legdam_overlay
-				var/mutable_appearance/armdam_overlay = mutable_appearance(limb_icon, "armdam_[BP.body_zone]_0[BP.burnstate]", -ARM_DAMAGE_LAYER)
-				armdam_overlays += armdam_overlay
+				damage_overlays += get_cached_damage_overlay(limb_icon, "[BP.body_zone]_0[BP.burnstate]", DAMAGE_LAYER, offset_x, offset_y)
+				legdam_overlays += get_cached_damage_overlay(limb_icon, "legdam_[BP.body_zone]_0[BP.burnstate]", LEG_DAMAGE_LAYER, offset_x, offset_y)
+				armdam_overlays += get_cached_damage_overlay(limb_icon, "armdam_[BP.body_zone]_0[BP.burnstate]", ARM_DAMAGE_LAYER, offset_x, offset_y)
 			if(BP.get_bleed_rate())
 				bleed_checker = TRUE
 				if(BP.bandage)
-					var/mutable_appearance/damage_overlay = mutable_appearance(limb_icon, "[BP.body_zone]_b", -DAMAGE_LAYER)
-					damage_overlay.color = BP.bandage.color
-					damage_overlays += damage_overlay
-					var/mutable_appearance/legdam_overlay = mutable_appearance(limb_icon, "legdam_[BP.body_zone]_b", -LEG_DAMAGE_LAYER)
-					legdam_overlay.color = BP.bandage.color
-					legdam_overlays += legdam_overlay
-					var/mutable_appearance/armdam_overlay = mutable_appearance(limb_icon, "armdam_[BP.body_zone]_b", -ARM_DAMAGE_LAYER)
-					armdam_overlay.color = BP.bandage.color
-					armdam_overlays += armdam_overlay
+					var/bandage_color = BP.bandage.color
+					damage_overlays += get_cached_damage_overlay(limb_icon, "[BP.body_zone]_b", DAMAGE_LAYER, offset_x, offset_y, bandage_color)
+					legdam_overlays += get_cached_damage_overlay(limb_icon, "legdam_[BP.body_zone]_b", LEG_DAMAGE_LAYER, offset_x, offset_y, bandage_color)
+					armdam_overlays += get_cached_damage_overlay(limb_icon, "armdam_[BP.body_zone]_b", ARM_DAMAGE_LAYER, offset_x, offset_y, bandage_color)
 			wound_overlays = list()
 			for(var/datum/wound/wound as anything in BP.wounds)
 				if(!wound.mob_overlay)
 					continue
 				wound_overlays |= wound.mob_overlay
 			for(var/wound_overlay in wound_overlays)
-				var/mutable_appearance/damage_overlay = mutable_appearance(limb_icon, "[BP.body_zone]_[wound_overlay]", -DAMAGE_LAYER)
-				damage_overlays += damage_overlay
-				var/mutable_appearance/legdam_overlay = mutable_appearance(limb_icon, "legdam_[BP.body_zone]_[wound_overlay]", -LEG_DAMAGE_LAYER)
-				legdam_overlays += legdam_overlay
-				var/mutable_appearance/armdam_overlay = mutable_appearance(limb_icon, "armdam_[BP.body_zone]_[wound_overlay]", -ARM_DAMAGE_LAYER)
-				armdam_overlays += armdam_overlay
+				damage_overlays += get_cached_damage_overlay(limb_icon, "[BP.body_zone]_[wound_overlay]", DAMAGE_LAYER, offset_x, offset_y)
+				legdam_overlays += get_cached_damage_overlay(limb_icon, "legdam_[BP.body_zone]_[wound_overlay]", LEG_DAMAGE_LAYER, offset_x, offset_y)
+				armdam_overlays += get_cached_damage_overlay(limb_icon, "armdam_[BP.body_zone]_[wound_overlay]", ARM_DAMAGE_LAYER, offset_x, offset_y)
 		if(!bleed_checker && BP.bandage)
-			var/mutable_appearance/damage_overlay = mutable_appearance(limb_icon, "[BP.body_zone]_b", -DAMAGE_LAYER)
-			damage_overlay.color = BP.bandage.color
-			damage_overlays += damage_overlay
-			var/mutable_appearance/legdam_overlay = mutable_appearance(limb_icon, "legdam_[BP.body_zone]_b", -LEG_DAMAGE_LAYER)
-			legdam_overlay.color = BP.bandage.color
-			legdam_overlays += legdam_overlay
-			var/mutable_appearance/armdam_overlay = mutable_appearance(limb_icon, "armdam_[BP.body_zone]_b", -ARM_DAMAGE_LAYER)
-			armdam_overlay.color = BP.bandage.color
-			armdam_overlays += armdam_overlay
+			var/bandage_color = BP.bandage.color
+			damage_overlays += get_cached_damage_overlay(limb_icon, "[BP.body_zone]_b", DAMAGE_LAYER, offset_x, offset_y, bandage_color)
+			legdam_overlays += get_cached_damage_overlay(limb_icon, "legdam_[BP.body_zone]_b", LEG_DAMAGE_LAYER, offset_x, offset_y, bandage_color)
+			armdam_overlays += get_cached_damage_overlay(limb_icon, "armdam_[BP.body_zone]_b", ARM_DAMAGE_LAYER, offset_x, offset_y, bandage_color)
 		if(BP.aux_zone && !((BP.body_zone == BODY_ZONE_CHEST) && hidechest))
 			if(!BP.skeletonized)
 				if(BP.brutestate)
-					var/mutable_appearance/damage_overlay = mutable_appearance(limb_icon, "[BP.aux_zone]_[BP.brutestate]0", -DAMAGE_LAYER)
-					damage_overlays += damage_overlay
-					var/mutable_appearance/legdam_overlay = mutable_appearance(limb_icon, "legdam_[BP.aux_zone]_[BP.brutestate]0", -LEG_DAMAGE_LAYER)
-					legdam_overlays += legdam_overlay
-					var/mutable_appearance/armdam_overlay = mutable_appearance(limb_icon, "armdam_[BP.aux_zone]_[BP.brutestate]0", -ARM_DAMAGE_LAYER)
-					armdam_overlays += armdam_overlay
+					damage_overlays += get_cached_damage_overlay(limb_icon, "[BP.aux_zone]_[BP.brutestate]0", DAMAGE_LAYER, offset_x, offset_y)
+					legdam_overlays += get_cached_damage_overlay(limb_icon, "legdam_[BP.aux_zone]_[BP.brutestate]0", LEG_DAMAGE_LAYER, offset_x, offset_y)
+					armdam_overlays += get_cached_damage_overlay(limb_icon, "armdam_[BP.aux_zone]_[BP.brutestate]0", ARM_DAMAGE_LAYER, offset_x, offset_y)
 				if(BP.burnstate)
-					var/mutable_appearance/damage_overlay = mutable_appearance(limb_icon, "[BP.aux_zone]_0[BP.burnstate]", -DAMAGE_LAYER)
-					damage_overlays += damage_overlay
-					var/mutable_appearance/legdam_overlay = mutable_appearance(limb_icon, "legdam_[BP.aux_zone]_0[BP.burnstate]", -LEG_DAMAGE_LAYER)
-					legdam_overlays += legdam_overlay
-					var/mutable_appearance/armdam_overlay = mutable_appearance(limb_icon, "armdam_[BP.aux_zone]_0[BP.burnstate]", -ARM_DAMAGE_LAYER)
-					armdam_overlays += armdam_overlay
+					damage_overlays += get_cached_damage_overlay(limb_icon, "[BP.aux_zone]_0[BP.burnstate]", DAMAGE_LAYER, offset_x, offset_y)
+					legdam_overlays += get_cached_damage_overlay(limb_icon, "legdam_[BP.aux_zone]_0[BP.burnstate]", LEG_DAMAGE_LAYER, offset_x, offset_y)
+					armdam_overlays += get_cached_damage_overlay(limb_icon, "armdam_[BP.aux_zone]_0[BP.burnstate]", ARM_DAMAGE_LAYER, offset_x, offset_y)
 				if(bleed_checker)
 					if(BP.bandage)
-						var/mutable_appearance/damage_overlay = mutable_appearance(limb_icon, "[BP.aux_zone]_b", -DAMAGE_LAYER)
-						damage_overlay.color = BP.bandage.color
-						damage_overlays += damage_overlay
-						var/mutable_appearance/legdam_overlay = mutable_appearance(limb_icon, "legdam_[BP.aux_zone]_b", -LEG_DAMAGE_LAYER)
-						legdam_overlay.color = BP.bandage.color
-						legdam_overlays += legdam_overlay
-						var/mutable_appearance/armdam_overlay = mutable_appearance(limb_icon, "armdam_[BP.aux_zone]_b", -ARM_DAMAGE_LAYER)
-						armdam_overlay.color = BP.bandage.color
-						armdam_overlays += armdam_overlay
+						var/bandage_color = BP.bandage.color
+						damage_overlays += get_cached_damage_overlay(limb_icon, "[BP.aux_zone]_b", DAMAGE_LAYER, offset_x, offset_y, bandage_color)
+						legdam_overlays += get_cached_damage_overlay(limb_icon, "legdam_[BP.aux_zone]_b", LEG_DAMAGE_LAYER, offset_x, offset_y, bandage_color)
+						armdam_overlays += get_cached_damage_overlay(limb_icon, "armdam_[BP.aux_zone]_b", ARM_DAMAGE_LAYER, offset_x, offset_y, bandage_color)
 				//We got the wound overlays before, it's all good
 				for(var/wound_overlay in wound_overlays)
-					var/mutable_appearance/damage_overlay = mutable_appearance(limb_icon, "[BP.aux_zone]_[wound_overlay]", -DAMAGE_LAYER)
-					damage_overlays += damage_overlay
-					var/mutable_appearance/legdam_overlay = mutable_appearance(limb_icon, "legdam_[BP.aux_zone]_[wound_overlay]", -LEG_DAMAGE_LAYER)
-					legdam_overlays += legdam_overlay
-					var/mutable_appearance/armdam_overlay = mutable_appearance(limb_icon, "armdam_[BP.aux_zone]_[wound_overlay]", -ARM_DAMAGE_LAYER)
-					armdam_overlays += armdam_overlay
+					damage_overlays += get_cached_damage_overlay(limb_icon, "[BP.aux_zone]_[wound_overlay]", DAMAGE_LAYER, offset_x, offset_y)
+					legdam_overlays += get_cached_damage_overlay(limb_icon, "legdam_[BP.aux_zone]_[wound_overlay]", LEG_DAMAGE_LAYER, offset_x, offset_y)
+					armdam_overlays += get_cached_damage_overlay(limb_icon, "armdam_[BP.aux_zone]_[wound_overlay]", ARM_DAMAGE_LAYER, offset_x, offset_y)
 			if(!bleed_checker && BP.bandage)
-				var/mutable_appearance/damage_overlay = mutable_appearance(limb_icon, "[BP.aux_zone]_b", -DAMAGE_LAYER)
-				damage_overlay.color = BP.bandage.color
-				damage_overlays += damage_overlay
-				var/mutable_appearance/legdam_overlay = mutable_appearance(limb_icon, "legdam_[BP.aux_zone]_b", -LEG_DAMAGE_LAYER)
-				legdam_overlay.color = BP.bandage.color
-				legdam_overlays += legdam_overlay
-				var/mutable_appearance/armdam_overlay = mutable_appearance(limb_icon, "armdam_[BP.aux_zone]_b", -ARM_DAMAGE_LAYER)
-				armdam_overlay.color = BP.bandage.color
-				armdam_overlays += armdam_overlay
+				var/bandage_color = BP.bandage.color
+				damage_overlays += get_cached_damage_overlay(limb_icon, "[BP.aux_zone]_b", DAMAGE_LAYER, offset_x, offset_y, bandage_color)
+				legdam_overlays += get_cached_damage_overlay(limb_icon, "legdam_[BP.aux_zone]_b", LEG_DAMAGE_LAYER, offset_x, offset_y, bandage_color)
+				armdam_overlays += get_cached_damage_overlay(limb_icon, "armdam_[BP.aux_zone]_b", ARM_DAMAGE_LAYER, offset_x, offset_y, bandage_color)
 
-		var/used_offset = BP.offset
-		for(var/mutable_appearance/M as anything in damage_overlays)
-			if(used_offset in offsets)
-				M.pixel_x += offsets[used_offset][1]
-				M.pixel_y += offsets[used_offset][2]
-			limb_overlaysa += M
-		for(var/mutable_appearance/M as anything in legdam_overlays)
-			if(used_offset in offsets)
-				M.pixel_x += offsets[used_offset][1]
-				M.pixel_y += offsets[used_offset][2]
-			limb_overlaysb += M
-		for(var/mutable_appearance/M as anything in armdam_overlays)
-			if(used_offset in offsets)
-				M.pixel_x += offsets[used_offset][1]
-				M.pixel_y += offsets[used_offset][2]
-			limb_overlaysc += M
+		limb_overlaysa += damage_overlays
+		limb_overlaysb += legdam_overlays
+		limb_overlaysc += armdam_overlays
 
 	overlays_standing[DAMAGE_LAYER] = limb_overlaysa
 	overlays_standing[LEG_DAMAGE_LAYER] = limb_overlaysb
@@ -249,6 +239,9 @@ GLOBAL_PROTECT(no_child_icons)
 	apply_overlay(DAMAGE_LAYER)
 	apply_overlay(LEG_DAMAGE_LAYER)
 	apply_overlay(ARM_DAMAGE_LAYER)
+
+	if(needs_body_update)
+		queue_icon_update(PENDING_UPDATE_HAIR)
 
 
 /* --------------------------------------- */
@@ -289,6 +282,7 @@ GLOBAL_PROTECT(no_child_icons)
 /mob/living/carbon/human/regenerate_icons()
 	if(!..())
 		icon_render_key = null //invalidate bodyparts cache
+		damage_overlay_cache_key = null
 		if(dna?.species?.regenerate_icons(src))
 			return
 		update_body()
@@ -398,6 +392,9 @@ GLOBAL_PROTECT(no_child_icons)
 
 
 /mob/living/carbon/human/update_inv_gloves()
+	queue_icon_update(PENDING_UPDATE_INV_GLOVES)
+
+/mob/living/carbon/human/update_inv_gloves_real()
 	remove_overlay(GLOVES_LAYER)
 	remove_overlay(GLOVESLEEVE_LAYER)
 
@@ -526,6 +523,9 @@ GLOBAL_PROTECT(no_child_icons)
 	apply_overlay(WRISTSLEEVE_LAYER)
 
 /mob/living/carbon/human/update_inv_shoes()
+	queue_icon_update(PENDING_UPDATE_INV_SHOES)
+
+/mob/living/carbon/human/update_inv_shoes_real()
 	remove_overlay(SHOES_LAYER)
 	remove_overlay(SHOESLEEVE_LAYER)
 
@@ -583,6 +583,11 @@ GLOBAL_PROTECT(no_child_icons)
 	apply_overlay(SHOESLEEVE_LAYER)
 
 /mob/living/carbon/human/update_inv_head(hide_nonstandard = FALSE)
+	if(hide_nonstandard)
+		return update_inv_head_real(hide_nonstandard)
+	queue_icon_update(PENDING_UPDATE_INV_HEAD)
+
+/mob/living/carbon/human/update_inv_head_real(hide_nonstandard = FALSE)
 	remove_overlay(HEAD_LAYER)
 
 	if(!get_bodypart(BODY_ZONE_HEAD)) //Decapitated
@@ -621,6 +626,11 @@ GLOBAL_PROTECT(no_child_icons)
 	update_body() //hoodies
 
 /mob/living/carbon/human/update_inv_belt(hide_experimental = FALSE)
+	if(hide_experimental)
+		return update_inv_belt_real(hide_experimental)
+	queue_icon_update(PENDING_UPDATE_INV_BELT)
+
+/mob/living/carbon/human/update_inv_belt_real(hide_experimental = FALSE)
 	remove_overlay(BELT_LAYER)
 	remove_overlay(BELT_BEHIND_LAYER)
 
@@ -789,6 +799,11 @@ GLOBAL_PROTECT(no_child_icons)
 	apply_overlay(MASK_LAYER)
 
 /mob/living/carbon/human/update_inv_back(hide_experimental = FALSE)
+	if(hide_experimental)
+		return update_inv_back_real(hide_experimental)
+	queue_icon_update(PENDING_UPDATE_INV_BACK)
+
+/mob/living/carbon/human/update_inv_back_real(hide_experimental = FALSE)
 	remove_overlay(BACK_LAYER)
 	remove_overlay(BACK_BEHIND_LAYER)
 	remove_overlay(UNDER_CLOAK_LAYER)
@@ -906,6 +921,9 @@ GLOBAL_PROTECT(no_child_icons)
 	apply_overlay(UNDER_CLOAK_LAYER)
 
 /mob/living/carbon/human/update_inv_cloak()
+	queue_icon_update(PENDING_UPDATE_INV_CLOAK)
+
+/mob/living/carbon/human/update_inv_cloak_real()
 	remove_overlay(CLOAK_LAYER)
 	remove_overlay(CLOAK_BEHIND_LAYER)
 	remove_overlay(TABARD_LAYER)
@@ -1001,6 +1019,9 @@ GLOBAL_PROTECT(no_child_icons)
 	apply_overlay(CLOAK_LAYER)
 
 /mob/living/carbon/human/update_inv_shirt()
+	queue_icon_update(PENDING_UPDATE_INV_SHIRT)
+
+/mob/living/carbon/human/update_inv_shirt_real()
 	remove_overlay(SHIRT_LAYER)
 	remove_overlay(SHIRTSLEEVE_LAYER)
 
@@ -1067,6 +1088,9 @@ GLOBAL_PROTECT(no_child_icons)
 	apply_overlay(SHIRTSLEEVE_LAYER)
 
 /mob/living/carbon/human/update_inv_armor()
+	queue_icon_update(PENDING_UPDATE_INV_ARMOR)
+
+/mob/living/carbon/human/update_inv_armor_real()
 	remove_overlay(ARMOR_LAYER)
 	remove_overlay(ARMORSLEEVE_LAYER)
 
@@ -1131,6 +1155,9 @@ GLOBAL_PROTECT(no_child_icons)
 	apply_overlay(ARMORSLEEVE_LAYER)
 
 /mob/living/carbon/human/update_inv_pants()
+	queue_icon_update(PENDING_UPDATE_INV_PANTS)
+
+/mob/living/carbon/human/update_inv_pants_real()
 	remove_overlay(PANTS_LAYER)
 	remove_overlay(LEGSLEEVE_LAYER)
 

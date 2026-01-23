@@ -13,7 +13,22 @@ GLOBAL_LIST_EMPTY(bitflag_lists)
  */
 #define SET_SMOOTHING_GROUPS(target) \
 	do { \
-		var/txt_signature = target; \
+		var/txt_signature; \
+		if(islist(target)) { \
+			if(target["0"] || target["1"]) { \
+				break; \
+			} \
+			txt_signature = ""; \
+			for(var/value in target) { \
+				txt_signature += "[value],"; \
+			}; \
+			target = txt_signature; \
+		}; \
+		if(!istext(target)) { \
+			target = null; \
+			break; \
+		}; \
+		txt_signature = target; \
 		if(isnull((target = GLOB.bitflag_lists[txt_signature]))) { \
 			var/list/new_bitflag_list = list(); \
 			var/list/decoded = UNWRAP_SMOOTHING_GROUPS(txt_signature, decoded); \

@@ -61,6 +61,7 @@
 
 /datum/outfit/servant/pre_equip(mob/living/carbon/human/H)
 	..()
+	neck = /obj/item/clothing/neck/slave_collar/female
 	if(H.gender == MALE)
 		shirt = /obj/item/clothing/shirt/undershirt/formal
 		if(H.age == AGE_OLD)
@@ -84,7 +85,6 @@
 		beltl = /obj/item/storage/keyring/manorguard
 		backl = /obj/item/storage/backpack/satchel
 		backpack_contents = list(/obj/item/recipe_book/cooking = 1, /obj/item/storage/belt/pouch/coins/poor = 1, /obj/item/rope/chain = 2, /obj/item/needle = 1)
-		neck = /obj/item/clothing/neck/leathercollar
 
 /datum/job/servant/after_spawn(mob/living/carbon/spawned, client/player_client)
 	..()

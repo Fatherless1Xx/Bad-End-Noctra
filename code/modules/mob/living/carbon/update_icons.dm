@@ -39,6 +39,76 @@
 	var/is_opposite_angle = REVERSE_ANGLE(lying_angle) == lying_prev
 	SEND_SIGNAL(src, COMSIG_LIVING_POST_UPDATE_TRANSFORM, resize, lying_angle, is_opposite_angle)
 
+/// Schedule a deferred icon update - batches multiple calls in the same tick
+/mob/living/carbon/proc/queue_icon_update(update_type)
+	pending_icon_updates |= update_type
+	if(!icon_update_scheduled_time || icon_update_scheduled_time < world.time)
+		icon_update_scheduled_time = world.time
+		addtimer(CALLBACK(src, PROC_REF(process_pending_icon_updates)), 0, TIMER_UNIQUE | TIMER_OVERRIDE)
+
+/// Process all pending icon updates in a single batch
+/mob/living/carbon/proc/process_pending_icon_updates()
+	while(pending_icon_updates)
+		var/updates = pending_icon_updates
+		pending_icon_updates = NONE
+		icon_update_scheduled_time = world.time
+
+		if(updates & PENDING_UPDATE_BODY)
+			update_body_parts()
+		if(updates & PENDING_UPDATE_HAIR)
+			update_body()
+		if(updates & PENDING_UPDATE_DAMAGE)
+			update_damage_overlays()
+		if(updates & PENDING_UPDATE_INV_HANDS)
+			update_inv_hands()
+		if(updates & PENDING_UPDATE_INV_GLOVES)
+			update_inv_gloves_real()
+		if(updates & PENDING_UPDATE_INV_SHOES)
+			update_inv_shoes_real()
+		if(updates & PENDING_UPDATE_INV_HEAD)
+			update_inv_head_real()
+		if(updates & PENDING_UPDATE_INV_BELT)
+			update_inv_belt_real()
+		if(updates & PENDING_UPDATE_INV_BACK)
+			update_inv_back_real()
+		if(updates & PENDING_UPDATE_INV_ARMOR)
+			update_inv_armor_real()
+		if(updates & PENDING_UPDATE_INV_SHIRT)
+			update_inv_shirt_real()
+		if(updates & PENDING_UPDATE_INV_PANTS)
+			update_inv_pants_real()
+		if(updates & PENDING_UPDATE_INV_CLOAK)
+			update_inv_cloak_real()
+	icon_update_scheduled_time = 0
+
+// Base implementations for carbon mobs - these are just stubs in case someone makes a non-human carbon mob
+/mob/living/carbon/proc/update_inv_gloves_real()
+	return
+
+/mob/living/carbon/proc/update_inv_shoes_real()
+	return
+
+/mob/living/carbon/proc/update_inv_head_real()
+	return
+
+/mob/living/carbon/proc/update_inv_belt_real()
+	return
+
+/mob/living/carbon/proc/update_inv_back_real()
+	return
+
+/mob/living/carbon/proc/update_inv_armor_real()
+	return
+
+/mob/living/carbon/proc/update_inv_shirt_real()
+	return
+
+/mob/living/carbon/proc/update_inv_pants_real()
+	return
+
+/mob/living/carbon/proc/update_inv_cloak_real()
+	return
+
 /mob/living
 	var/list/overlays_standing[TOTAL_LAYERS]
 

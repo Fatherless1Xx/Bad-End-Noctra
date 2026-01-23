@@ -3,6 +3,7 @@
 	desc = "The dirt road is covered in a layer of snow."
 	icon = 'modular_rmh/icons/turf/snow.dmi'
 	icon_state = "snowpatchy_grass"
+	var/opened = FALSE
 	footstep = FOOTSTEP_GRASS
 	barefootstep = FOOTSTEP_SOFT_BAREFOOT
 	heavyfootstep = FOOTSTEP_GENERIC_HEAVY

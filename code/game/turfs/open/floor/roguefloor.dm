@@ -913,6 +913,7 @@
 
 /turf/open/floor/tile/diamond
 	icon_state = "dia_tile"
+	var/open = FALSE
 
 /turf/open/floor/tile/diamond/blue
 	icon_state = "dia_tile1"
