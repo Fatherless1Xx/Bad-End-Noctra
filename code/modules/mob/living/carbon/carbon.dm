@@ -388,7 +388,9 @@
 			leash_item.leash_pet = null
 			leash_item.leashed = FALSE
 		if(leash_component)
-			leash_component.remove_leash()
+			if(leash_component.break_callback)
+				leash_component.break_callback.Invoke()
+			qdel(leash_component)
 		to_chat(src, "<span class='warning'>[src] has removed their leash!</span>")
 		remove_status_effect(/datum/status_effect/leash_pet)
 		remove_status_effect(/datum/status_effect/leash_freepet)
