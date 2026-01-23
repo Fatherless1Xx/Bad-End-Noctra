@@ -1038,38 +1038,46 @@
 	update_inv_handcuffed()
 	update_hud_handcuffed()
 
-/mob/living/carbon/fully_heal(admin_revive = FALSE)
-	if(reagents)
-		reagents.clear_reagents()
-		for(var/addi in reagents.addiction_list)
-			reagents.remove_addiction(addi)
-	for(var/obj/item/organ/organ as anything in internal_organs)
-		organ.setOrganDamage(0)
-	var/obj/item/organ/brain/B = getorgan(/obj/item/organ/brain)
-	if(B)
-		B.brain_death = FALSE
-	var/datum/component/rot/corpse/CR = GetComponent(/datum/component/rot/corpse)
-	if(CR)
-		CR.amount = 0
-	if(admin_revive) //reset rot on admin revives
+/mob/living/carbon/fully_heal(heal_flags = HEAL_ALL)
+	if(heal_flags & (HEAL_ORGANS | HEAL_REFRESH_ORGANS))
+		for(var/obj/item/organ/organ as anything in internal_organs)
+			organ.setOrganDamage(0)
+		var/obj/item/organ/brain/B = getorgan(/obj/item/organ/brain)
+		if(B)
+			B.brain_death = FALSE
+
+	if(heal_flags & HEAL_REFRESH_ORGANS)
+		regenerate_organs()
+
+	if(heal_flags & HEAL_LIMBS)
+		regenerate_limbs()
+
+	if(heal_flags & HEAL_BODY)
+		var/datum/component/rot/corpse/CR = GetComponent(/datum/component/rot/corpse)
+		if(CR)
+			CR.amount = 0
+
+	if(heal_flags & HEAL_ADMIN) //reset rot on admin revives
 		for(var/obj/item/bodypart/bodypart as anything in bodyparts)
 			bodypart.rotted = FALSE
 			bodypart.skeletonized = FALSE
-	if(admin_revive)
-		suiciding = FALSE
-		regenerate_limbs()
-		regenerate_organs()
+		if(reagents)
+			reagents.addiction_list = list()
+
+	if(heal_flags & HEAL_RESTRAINTS)
 		set_handcuffed(null)
 		for(var/obj/item/restraints/R in contents) //actually remove cuffs from inventory
 			qdel(R)
 		update_handcuffed()
-		if(reagents)
-			reagents.addiction_list = list()
-	cure_all_traumas(TRAUMA_RESILIENCE_MAGIC)
-	..()
+
+	if(heal_flags & HEAL_TRAUMAS)
+		cure_all_traumas(TRAUMA_RESILIENCE_MAGIC)
+
+	..(heal_flags)
 	// heal ears after healing traits, since ears check TRAIT_DEAF trait
 	// when healing.
-	restoreEars()
+	if(heal_flags & (HEAL_ORGANS | HEAL_REFRESH_ORGANS))
+		restoreEars()
 	// update_disabled_bodyparts()
 
 /mob/living/carbon/can_be_revived()
