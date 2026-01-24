@@ -103,9 +103,25 @@ DEFINE_BITFIELD(smooth, list(
 		if(PERFORM_ALL_TESTS(focus_only/sorted_smoothing_groups)) { \
 			ASSERT_SORTED_SMOOTHING_GROUPS(smoothing_list); \
 		} \
-		/* S_OBJ is always negative, and we are guaranteed to be sorted. */ \
-		if(smoothing_list[1] == "-") { \
-			smoothing_flags |= SMOOTH_OBJ; \
+		if(islist(smoothing_list)) { \
+			if(!(smoothing_flags & SMOOTH_OBJ)) { \
+				for(var/value in smoothing_list) { \
+					if(istext(value)) { \
+						if(copytext(value, 1, 2) == "-") { \
+							smoothing_flags |= SMOOTH_OBJ; \
+							break; \
+						}; \
+					} else if(isnum(value) && value < 0) { \
+						smoothing_flags |= SMOOTH_OBJ; \
+						break; \
+					}; \
+				}; \
+			}; \
+		} else { \
+			/* S_OBJ is always negative, and we are guaranteed to be sorted. */ \
+			if(smoothing_list[1] == "-") { \
+				smoothing_flags |= SMOOTH_OBJ; \
+			}; \
 		} \
 		SET_SMOOTHING_GROUPS(smoothing_list); \
 	}

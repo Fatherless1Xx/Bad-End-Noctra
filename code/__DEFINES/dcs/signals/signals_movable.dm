@@ -15,6 +15,14 @@
 #define COMSIG_MOB_CLIENT_PRE_LIVING_MOVE "mob_client_pre_living_move"
 	/// Should we stop the current living movement attempt
 	#define COMSIG_MOB_CLIENT_BLOCK_PRE_LIVING_MOVE COMPONENT_MOVABLE_BLOCK_PRE_MOVE
+/// Backwards-compat alias for older code using pre-move hooks.
+#define COMSIG_MOB_CLIENT_PRE_MOVE COMSIG_MOB_CLIENT_PRE_LIVING_MOVE
+	/// Should always match COMSIG_MOB_CLIENT_BLOCK_PRE_LIVING_MOVE.
+	#define COMSIG_MOB_CLIENT_BLOCK_PRE_MOVE COMSIG_MOB_CLIENT_BLOCK_PRE_LIVING_MOVE
+	/// The argument of move_args which corresponds to the loc we're moving to.
+	#define MOVE_ARG_NEW_LOC 1
+	/// The argument of move_args which dictates our movement direction.
+	#define MOVE_ARG_DIRECTION 2
 /// From base of /client/Move(): (direction, old_direction)
 #define COMSIG_MOB_CLIENT_MOVED "mob_client_moved"
 

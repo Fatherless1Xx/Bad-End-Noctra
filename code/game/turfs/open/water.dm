@@ -562,10 +562,13 @@
 				var/obj/item/bodypart/BP = C.get_bodypart(pick_n_take(zonee))
 				if(!BP)
 					continue
+				if(QDELETED(BP) || !hascall(BP, "add_embedded_object"))
+					continue
 				if(BP.skeletonized)
 					continue
 				var/obj/item/natural/worms/leech/I = new(C)
-				BP.add_embedded_object(I, silent = TRUE)
+				if(!BP.add_embedded_object(I, silent = TRUE))
+					qdel(I)
 				return .
 
 /datum/reagent/water/gross/sewer
@@ -609,10 +612,13 @@
 				var/obj/item/bodypart/BP = C.get_bodypart(pick_n_take(zonee))
 				if(!BP)
 					continue
+				if(QDELETED(BP) || !hascall(BP, "add_embedded_object"))
+					continue
 				if(BP.skeletonized)
 					continue
 				var/obj/item/natural/worms/leech/I = new(C)
-				BP.add_embedded_object(I, silent = TRUE)
+				if(!BP.add_embedded_object(I, silent = TRUE))
+					qdel(I)
 				return .
 
 /turf/open/water/swamp/deep
@@ -643,10 +649,13 @@
 				var/obj/item/bodypart/BP = C.get_bodypart(pick_n_take(zonee))
 				if(!BP)
 					continue
+				if(QDELETED(BP) || !hascall(BP, "add_embedded_object"))
+					continue
 				if(BP.skeletonized)
 					continue
 				var/obj/item/natural/worms/leech/I = new(C)
-				BP.add_embedded_object(I, silent = TRUE)
+				if(!BP.add_embedded_object(I, silent = TRUE))
+					qdel(I)
 				return .
 
 /turf/open/water/marsh

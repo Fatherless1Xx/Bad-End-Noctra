@@ -23,6 +23,8 @@
 	skill_median = SKILL_LEVEL_MASTER
 	preop_sound = 'sound/surgery/organ2.ogg'
 	success_sound = 'sound/surgery/organ1.ogg'
+	var/tainted_lux = FALSE
+	var/tainted_mob = FALSE
 
 /datum/surgery_step/bestow_lux/validate_target(mob/user, mob/living/target, target_zone, datum/intent/intent)
 	. = ..()
@@ -34,9 +36,12 @@
 		to_chat(user, "They do not need more Lux!")
 		return FALSE
 
+	if(target.get_lux_tainted_status())
+		tainted_mob = TRUE
+
 /datum/surgery_step/bestow_lux/preop(mob/user, mob/living/target, target_zone, obj/item/tool, datum/intent/intent)
-	var/tainted_mob = target.get_lux_tainted_status()
-	var/tainted_lux = istype(tool, /obj/item/reagent_containers/lux_tainted)
+	if(istype(tool, /obj/item/reagent_containers/lux_tainted))
+		tainted_lux = TRUE
 	if(tainted_mob && !tainted_lux)
 		to_chat(user, "They can only receive tainted lux!")
 		return FALSE
@@ -46,8 +51,6 @@
 	return TRUE
 
 /datum/surgery_step/bestow_lux/success(mob/user, mob/living/target, target_zone, obj/item/tool, datum/intent/intent)
-	var/tainted_mob = target.get_lux_tainted_status()
-	var/tainted_lux = istype(tool, /obj/item/reagent_containers/lux_tainted)
 	if(tainted_lux && !tainted_mob)
 		if(prob(50))
 			display_results(user, target,
@@ -64,7 +67,7 @@
 		"[user] works the [tool.name] into [target]'s innards.")
 
 	target.emote("breathgasp")
-	target.Jitter(100)
+	target.adjust_jitter(100 SECONDS)
 	target.update_body()
 	qdel(tool)
 	if(target.get_lux_status() == LUX_NO_LUX)

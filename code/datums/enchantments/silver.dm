@@ -176,7 +176,8 @@
 
 /atom/movable/screen/alert/status_effect/debuff/silver_bane
 	name = "Silver's Bane"
-	desc = ""
+	desc = "My BANE!"
+	icon_state = "hunger4"
 
 /atom/movable/screen/alert/status_effect/debuff/silver_bane/proc/update_info(stacks, is_stunned)
 	if(is_stunned)
@@ -185,6 +186,11 @@
 	else
 		name = "Silver's Bane ([stacks]/[SILVER_BANE_MAX_STACKS])"
 		desc = span_warning("I am cursed by silver. [SILVER_BANE_MAX_STACKS - stacks] more contact[SILVER_BANE_MAX_STACKS - stacks == 1 ? "" : "s"] will overwhelm me!")
+
+/datum/status_effect/debuff/silver_curse
+	parent_type = /datum/status_effect/debuff/silver_bane
+	id = "silver_curse"
+	alert_type = /atom/movable/screen/alert/status_effect/debuff/silver_bane
 
 #undef AFFECTED
 #undef AFFECTED_VLORD

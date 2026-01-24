@@ -34,6 +34,8 @@
 							//IE if the turf is supposed to be water, set TRUE.
 
 	var/debris = null
+	var/redstone_id
+	var/anchored = TRUE
 
 	/// What we overlay onto turfs in our smoothing_list
 	var/neighborlay

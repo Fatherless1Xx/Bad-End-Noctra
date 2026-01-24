@@ -306,3 +306,151 @@
 	SIGNAL_HANDLER
 	examine_list += span_info("\nThey have a submissive aura about them.")*/
 
+// Vice quirks (addictions handled via quirks)
+/datum/quirk/vice
+	abstract_type = /datum/quirk/vice
+	value = -2
+	var/next_sate = 0
+	var/sated = TRUE
+	var/time = 5 MINUTES
+	var/debuff = /datum/status_effect/debuff/addiction
+	var/needsate_text
+	var/sated_text = "That's much better..."
+	var/unsate_time
+
+/datum/quirk/vice/New(mob/living/quirk_mob, spawn_effects)
+	..()
+	if(QDELETED(src))
+		return
+	next_sate = world.time + rand(10 MINUTES, 20 MINUTES)
+
+/datum/quirk/vice/proc/sate()
+	var/mob/living/carbon/human/H = quirk_holder
+	if(!H)
+		return
+	H.remove_stress(list(/datum/stress_event/vice1,/datum/stress_event/vice2,/datum/stress_event/vice3))
+	if(!sated)
+		to_chat(H, span_blue(sated_text))
+	sated = TRUE
+	next_sate = world.time + time + rand(-1 MINUTES, 1 MINUTES)
+	if(debuff)
+		H.remove_status_effect(debuff)
+
+/datum/quirk/vice/on_process()
+	if(!ishuman(quirk_holder))
+		return
+	var/mob/living/carbon/human/H = quirk_holder
+	if(H.mind?.antag_datums)
+		for(var/datum/antagonist/D in H.mind?.antag_datums)
+			if(istype(D, /datum/antagonist/vampire) || istype(D, /datum/antagonist/werewolf) || istype(D, /datum/antagonist/skeleton) || istype(D, /datum/antagonist/zombie))
+				return
+	var/oldsated = sated
+	if(oldsated && next_sate && world.time > next_sate)
+		sated = FALSE
+	if(sated != oldsated)
+		unsate_time = world.time
+		if(needsate_text)
+			to_chat(H, span_boldwarning("[needsate_text]"))
+	if(!sated)
+		switch(world.time - unsate_time)
+			if(0 to 5 MINUTES)
+				H.add_stress(/datum/stress_event/vice1)
+				H.remove_stress(/datum/stress_event/vice2)
+				H.remove_stress(/datum/stress_event/vice3)
+			if(5 MINUTES to 15 MINUTES)
+				H.add_stress(/datum/stress_event/vice2)
+				H.remove_stress(/datum/stress_event/vice1)
+				H.remove_stress(/datum/stress_event/vice3)
+			if(15 MINUTES to INFINITY)
+				H.add_stress(/datum/stress_event/vice3)
+				H.remove_stress(/datum/stress_event/vice1)
+				H.remove_stress(/datum/stress_event/vice2)
+		if(debuff)
+			H.apply_status_effect(debuff)
+
+/datum/quirk/vice/alcoholic
+	name = "Alcoholic"
+	desc = "Drinking alcohol is my favorite thing."
+	value = -1
+	time = 40 MINUTES
+	needsate_text = "Time for a drink."
+
+/datum/quirk/vice/junkie
+	name = "Junkie"
+	desc = "I need a real high to take the pain of this rotten world away."
+	value = -2
+	time = 50 MINUTES
+	needsate_text = "Time to reach a new high."
+
+/datum/quirk/vice/hunted
+	name = "Hunted"
+	desc = "Something in your past has made you a target. You're always looking over your shoulder. This is a difficult quirk."
+	value = -5
+	var/logged = FALSE
+
+/datum/quirk/vice/hunted/on_process()
+	if(!ishuman(quirk_holder))
+		return
+	var/mob/living/carbon/human/H = quirk_holder
+	if(!logged && H.name)
+		log_hunted("[H.ckey] playing as [H.name] has the hunted quirk.")
+		logged = TRUE
+
+/datum/quirk/vice/hardcore
+	name = "Hardcore"
+	desc = "ONE CHANCE. When you die, you have no place in the underworld. You will be reincarnated as a rat, unable to do anything."
+	value = -3
+	var/turning = FALSE
+
+/datum/quirk/vice/hardcore/on_spawn()
+	if(!ishuman(quirk_holder))
+		return
+	RegisterSignal(quirk_holder, COMSIG_LIVING_DEATH, PROC_REF(on_death))
+	RegisterSignal(quirk_holder, COMSIG_LIVING_TRY_ENTER_AFTERLIFE, PROC_REF(on_death))
+	to_chat(quirk_holder, span_boldwarning("You have chosen HARDCORE mode. If you die, you will become a rat. There are no second chances."))
+
+/datum/quirk/vice/hardcore/remove()
+	if(!ishuman(quirk_holder))
+		return
+	UnregisterSignal(quirk_holder, COMSIG_LIVING_DEATH)
+	UnregisterSignal(quirk_holder, COMSIG_LIVING_TRY_ENTER_AFTERLIFE)
+
+/datum/quirk/vice/hardcore/on_process()
+	return
+
+/datum/quirk/vice/hardcore/proc/on_death(mob/living/source)
+	if(turning)
+		return TRUE
+	if(!ishuman(source))
+		return
+
+	addtimer(CALLBACK(src, PROC_REF(transform_to_rat), source), 3 SECONDS)
+	turning = TRUE
+	return TRUE
+
+/datum/quirk/vice/hardcore/proc/transform_to_rat(mob/living/carbon/human/H)
+	turning = FALSE
+	if(!H?.mind)
+		return
+
+	var/turf/T
+	if(!H || QDELETED(H))
+		T = get_turf(pick(SSjob.latejoin_trackers))
+	else
+		T = get_turf(H)
+	if(!T)
+		return
+
+	var/mob/living/simple_animal/hostile/retaliate/smallrat/new_rat = new(T)
+	H.mind.transfer_to(new_rat)
+
+	to_chat(new_rat, span_userdanger("You have been reincarnated as a rat. Your adventure ends here."))
+
+	ADD_TRAIT(new_rat, TRAIT_PACIFISM, TRAIT_GENERIC)
+	ADD_TRAIT(new_rat, TRAIT_MUTE, TRAIT_GENERIC)
+	new_rat.melee_damage_lower = 0
+	new_rat.melee_damage_upper = 0
+	new_rat.obj_damage = 0
+	new_rat.status_flags |= GODMODE
+	ADD_TRAIT(new_rat, TRAIT_NOFIRE, TRAIT_GENERIC)
+

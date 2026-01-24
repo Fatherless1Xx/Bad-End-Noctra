@@ -76,7 +76,7 @@
 		visible_message(flare_message)
 	else
 		visible_message(found_message)
-	if(sparks)
+	if(sparks && spark_system)
 		spark_system.start()
 	no_over_text = FALSE
 	alpha = 200

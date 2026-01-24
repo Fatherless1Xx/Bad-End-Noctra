@@ -412,18 +412,35 @@ GLOBAL_LIST_INIT(roleplay_readme, world.file2list("strings/rt/Lore_Primer.txt"))
 
 	var/datum/job/job = SSjob.GetJob(rank)
 
-	SSjob.AssignRole(src, job, 1)
+	if(!job)
+		stack_trace("Latejoin failed: invalid job \"[rank]\" for [key_name(src)]")
+		to_chat(src, span_warning("That role is unavailable right now. Please try again."))
+		return FALSE
+
+	if(!SSjob.AssignRole(src, job, 1))
+		stack_trace("Latejoin failed: AssignRole failed for [key_name(src)] job [job?.title || "null"]")
+		to_chat(src, span_warning("Unable to join as that role right now. Please try again."))
+		return FALSE
+
+	if(!mind?.assigned_role)
+		stack_trace("Latejoin failed: assigned_role missing for [key_name(src)] after AssignRole")
+		to_chat(src, span_warning("Unable to join as that role right now. Please try again."))
+		return FALSE
 
 	mind.late_joiner = TRUE
 
 	var/atom/destination = mind.assigned_role.get_latejoin_spawn_point()
 	if(!destination)
-		CRASH("Failed to find a latejoin spawn point.")
+		stack_trace("Latejoin failed: no spawn point for [mind.assigned_role] for [key_name(src)]")
+		to_chat(src, span_warning("No spawn point was available for that role. Please try again."))
+		return FALSE
 	islatejoin = TRUE
 	var/mob/living/character = create_character(destination)
-	character.islatejoin = TRUE
 	if(!character)
-		CRASH("Failed to create a character for latejoin.")
+		stack_trace("Latejoin failed: create_character returned null for [key_name(src)] job [mind.assigned_role]")
+		to_chat(src, span_warning("Failed to create a character. Please try again."))
+		return FALSE
+	character.islatejoin = TRUE
 	transfer_character()
 
 	SSjob.EquipRank(character, job, character.client)

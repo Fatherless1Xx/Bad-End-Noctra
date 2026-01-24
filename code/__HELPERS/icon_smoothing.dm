@@ -67,6 +67,30 @@ DEFINE_BITFIELD(smoothing_junction, list(
 
 	// cache for sanic speed
 	var/smoothing_list = src.smoothing_list
+	if(smoothing_list)
+		if(!(smoothing_flags & SMOOTH_OBJ))
+			if(istext(smoothing_list))
+				if(copytext(smoothing_list, 1, 2) == "-")
+					smoothing_flags |= SMOOTH_OBJ
+			else if(islist(smoothing_list))
+				for(var/value in smoothing_list)
+					if(istext(value))
+						if(copytext(value, 1, 2) == "-")
+							smoothing_flags |= SMOOTH_OBJ
+							break
+					else if(isnum(value) && value < 0)
+						smoothing_flags |= SMOOTH_OBJ
+						break
+		if(islist(smoothing_list))
+			if(!(smoothing_list["0"] || smoothing_list["1"]))
+				SET_SMOOTHING_GROUPS(smoothing_list)
+				src.smoothing_list = smoothing_list
+		else if(istext(smoothing_list))
+			SET_SMOOTHING_GROUPS(smoothing_list)
+			src.smoothing_list = smoothing_list
+		else
+			src.smoothing_list = null
+		smoothing_list = src.smoothing_list
 
 	var/smooth_border = (smoothing_flags & SMOOTH_BORDER)
 	var/smooth_obj = (smoothing_flags & SMOOTH_OBJ)
@@ -98,11 +122,31 @@ DEFINE_BITFIELD(smoothing_junction, list(
 							continue; \
 						}; \
 						var/thing_smoothing_groups = thing.smoothing_groups; \
+						if(thing_smoothing_groups) { \
+							if(islist(thing_smoothing_groups)) { \
+								if(!(thing_smoothing_groups["0"] || thing_smoothing_groups["1"])) { \
+									SET_SMOOTHING_GROUPS(thing_smoothing_groups); \
+									thing.smoothing_groups = thing_smoothing_groups; \
+								}; \
+							} else if(istext(thing_smoothing_groups)) { \
+								SET_SMOOTHING_GROUPS(thing_smoothing_groups); \
+								thing.smoothing_groups = thing_smoothing_groups; \
+							} else { \
+								thing_smoothing_groups = null; \
+							}; \
+						}; \
 						if(!thing_smoothing_groups) { \
 							continue; \
 						}; \
+						if(!islist(smoothing_list) || !islist(thing_smoothing_groups)) { \
+							continue; \
+						}; \
 						for(var/target in smoothing_list) { \
-							if(smoothing_list[target] & thing_smoothing_groups[target]) { \
+							var/target_key = isnum(target) ? "[target]" : target; \
+							if(!target_key) { \
+								continue; \
+							}; \
+							if(smoothing_list[target_key] & thing_smoothing_groups[target_key]) { \
 								new_junction |= direction_flag; \
 								break set_adj_in_dir; \
 							}; \
@@ -115,11 +159,31 @@ DEFINE_BITFIELD(smoothing_junction, list(
 					}; \
 					break set_adj_in_dir; \
 				}; \
-				var/neighbor_smoothing_groups = neighbor.smoothing_groups; \
-				if(neighbor_smoothing_groups) { \
-					for(var/target as anything in smoothing_list) { \
-						if(smoothing_list[target] & neighbor_smoothing_groups[target]) { \
-							new_junction |= direction_flag; \
+					var/neighbor_smoothing_groups = neighbor.smoothing_groups; \
+					if(neighbor_smoothing_groups) { \
+						if(islist(neighbor_smoothing_groups)) { \
+							if(!(neighbor_smoothing_groups["0"] || neighbor_smoothing_groups["1"])) { \
+								SET_SMOOTHING_GROUPS(neighbor_smoothing_groups); \
+								neighbor.smoothing_groups = neighbor_smoothing_groups; \
+							}; \
+						} else if(istext(neighbor_smoothing_groups)) { \
+							SET_SMOOTHING_GROUPS(neighbor_smoothing_groups); \
+							neighbor.smoothing_groups = neighbor_smoothing_groups; \
+						} else { \
+							neighbor_smoothing_groups = null; \
+						}; \
+					}; \
+					if(neighbor_smoothing_groups) { \
+						if(!islist(smoothing_list) || !islist(neighbor_smoothing_groups)) { \
+							break set_adj_in_dir; \
+						}; \
+						for(var/target as anything in smoothing_list) { \
+							var/target_key = isnum(target) ? "[target]" : target; \
+							if(!target_key) { \
+								continue; \
+							}; \
+							if(smoothing_list[target_key] & neighbor_smoothing_groups[target_key]) { \
+								new_junction |= direction_flag; \
 							break set_adj_in_dir; \
 						}; \
 					}; \

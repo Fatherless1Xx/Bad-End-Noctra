@@ -1,6 +1,14 @@
 //predominantly positive traits
 //this file is named weirdly so that positive traits are listed above negative ones
 
+/datum/quirk/boon
+	abstract_type = /datum/quirk/boon
+
+/datum/quirk/boon/keen_eye
+	name = "Keen Eye"
+	desc = "Years of hunting and tracking have honed your sight."
+	value = 2
+
 /datum/quirk/alcohol_tolerance
 	name = "Alcohol Tolerance"
 	desc = "Alcohol doesn't affect me much."

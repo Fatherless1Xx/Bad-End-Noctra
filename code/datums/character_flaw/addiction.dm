@@ -1,7 +1,16 @@
-/mob/proc/sate_addiction()
+/mob/proc/sate_addiction(quirk_type)
 	return
 
-/mob/living/carbon/human/sate_addiction()
+/mob/living/carbon/human/sate_addiction(quirk_type)
+	if(quirk_type)
+		for(var/datum/quirk/vice/vice in roundstart_quirks)
+			if(istype(vice, quirk_type))
+				vice.sate()
+				break
+	else
+		for(var/datum/quirk/vice/vice in roundstart_quirks)
+			vice.sate()
+
 	if(istype(charflaw, /datum/charflaw/addiction))
 		var/datum/charflaw/addiction/A = charflaw
 		remove_stress(list(/datum/stress_event/vice1,/datum/stress_event/vice2,/datum/stress_event/vice3))

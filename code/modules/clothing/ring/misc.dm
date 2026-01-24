@@ -199,6 +199,9 @@
 	desc = "A ring forged within the bowels of Mt. Decapitation, foretold to contain the tomb of the eldest of Zizo's Necrarchs. Bestowed with enchanted protections against any arcyne rivals. A ring fit for a Lord of Arcyne"
 	cdtime = 5 MINUTES
 	activetime = 60 SECONDS
+	var/list/phrases_list = list()
+	var/ring_bound = FALSE
+	var/obj/item/clothing/neck/slave_collar/bound_collar
 
 /obj/item/clothing/ring/active/nomag/master/Initialize()
 	. = ..()
@@ -209,6 +212,32 @@
 	if(SSroguemachine.crown == src)
 		SSroguemachine.crown = null
 	return ..()
+
+/obj/item/clothing/ring/active/nomag/master/attackby(obj/item/I, mob/living/user)
+	if(!ismob(user))
+		return
+	if(istype(I, /obj/item/clothing/neck/slave_collar))
+		var/obj/item/clothing/neck/slave_collar/sc = I
+		sc.bind_collar(I, src, user)
+		return
+	return ..()
+
+/obj/item/clothing/ring/active/nomag/master/MiddleClick(mob/user, params)
+	if(ring_bound)
+		var/command_input = browser_input_list(user, "SELECT THE DEMAND", "DECREES", GLOB.reverse_slave_phrases_translations, null)
+		if(command_input)
+			if(bound_collar.perform_command(normalize_slave_phrase(phrases_list[GLOB.reverse_slave_phrases_translations[command_input]])))
+				to_chat(user, "<font size='1' color='grey'>The ring vibrates imperceptably - the command was a success.</font>")
+			else
+				to_chat(user, "<font size='1' color='red'>The ring lies still - command failed to perform.</font>")
+		return
+	. = ..()
+
+/obj/item/clothing/ring/active/nomag/master/examine(mob/user)
+	. = ..()
+	. += span_userdanger("You notice three engraved phrases on the ring:")
+	for(var/el in phrases_list)
+		. += "<br><b>[GLOB.slave_phrases_translations[el]]:</b> \"[phrases_list[el]]\""
 
 /obj/item/clothing/ring/active/nomag/master/proc/anti_stall()
 	visible_message(span_warning("[src] crumbles to dust, the ashes spiriting away in the direction of the Manor."))

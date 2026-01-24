@@ -16,11 +16,21 @@
 	var/special_role = ROLE_WEREWOLF
 	/// Whether we are in WW form or human form
 	var/transformed
+	/// How much rage decays by while transformed
+	var/transformed_rage_decay = 5
 	/// Tracks when in the middle of either transforming into or out of WW form
 	var/transforming
 	var/untransforming
 
 	var/wolfname = "Werevolf"
+	var/list/datum/action/werewolf_form_powers = list(
+		/datum/action/cooldown/spell/undirected/howl,
+		/datum/action/cooldown/spell/undirected/claws,
+		/datum/action/cooldown/spell/aoe/repulse/howl,
+		/datum/action/cooldown/spell/woundlick,
+		/datum/action/cooldown/spell/lunge,
+		/datum/action/cooldown/spell/throw_target
+	)
 	COOLDOWN_DECLARE(message_cooldown)
 
 	innate_traits = list(
@@ -64,8 +74,8 @@
 	if(increase_votepwr)
 		forge_werewolf_objectives()
 	owner.current.add_spell(/datum/action/cooldown/spell/undirected/werewolf_form)
-	owner.current.RegisterSignal(owner.current, COMSIG_RAGE_BOTTOMED, TYPE_PROC_REF(/mob/living/carbon/human, werewolf_untransform))
-	owner.current.RegisterSignal(owner.current, COMSIG_RAGE_OVERRAGE, TYPE_PROC_REF(/mob/living/carbon/human, werewolf_transform))
+	RegisterSignal(owner.current, COMSIG_RAGE_BOTTOMED, PROC_REF(remove_werewolf))
+	RegisterSignal(owner.current, COMSIG_RAGE_OVERRAGE, PROC_REF(begin_transform))
 
 	var/datum/rage/new_rage = new
 	new_rage.grant_to(owner.current)
@@ -79,8 +89,7 @@
 		to_chat(owner.current,span_danger("I am no longer a [special_role]!"))
 	owner.special_role = null
 	owner.current.remove_spell(/datum/action/cooldown/spell/undirected/werewolf_form)
-	owner.current.UnregisterSignal(owner.current, COMSIG_RAGE_BOTTOMED)
-	owner.current.UnregisterSignal(owner.current, COMSIG_RAGE_OVERRAGE)
+	UnregisterSignal(owner.current, list(COMSIG_RAGE_BOTTOMED, COMSIG_RAGE_OVERRAGE))
 
 
 	owner.current.verbs -= /mob/living/carbon/human/proc/toggle_werewolf_transform
@@ -120,6 +129,8 @@
 /mob/living/carbon/human/proc/can_werewolf()
 	if(!mind)
 		return FALSE
+	if(mind.has_antag_datum(/datum/antagonist/zombie))
+		return FALSE
 	if(mind.has_antag_datum(/datum/antagonist/vampire))
 		return FALSE
 	if(mind.has_antag_datum(/datum/antagonist/werewolf))
@@ -158,7 +169,7 @@
 /mob/living/carbon/human/proc/werewolf_feed(mob/living/carbon/human/target, healing_amount = 10)
 	if(!istype(target))
 		return
-	if(src.has_status_effect(/datum/status_effect/debuff/silver_curse))
+	if(src.has_status_effect(/datum/status_effect/debuff/silver_bane))
 		to_chat(src, span_notice("My power is weakened, I cannot heal!"))
 		return
 	if(target.mind)
@@ -258,11 +269,9 @@
 		ww.forced_transform = TRUE
 	if(!ww.transformed && ww.forced_transform)
 		flash_fullscreen("redflash3")
-		werewolf_transform()
-		ww.transformed = TRUE
+		ww.werewolf_transform()
 	else if(ww.transformed)
-		werewolf_untransform()
+		ww.remove_werewolf(TRUE)
 		flash_fullscreen("redflash3")
-		ww.transformed = FALSE
 		Stun(30)
 		Knockdown(30)

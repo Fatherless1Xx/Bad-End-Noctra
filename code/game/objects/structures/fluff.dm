@@ -127,16 +127,7 @@
 	return ..()
 
 /obj/structure/fluff/railing/corner
-	icon_state = "border"
-
-/obj/structure/fluff/railing/corner/north_east
-	dir = 5
-
-/obj/structure/fluff/railing/corner/south_west
-	dir = 10
-
-/obj/structure/fluff/railing/corner/south_east
-	dir = 6
+	icon_state = "railing_corner"
 
 /obj/structure/fluff/railing/corner/init_connect_loc_element()
 	return
@@ -145,15 +136,6 @@
 	icon_state = "woodrailing"
 	blade_dulling = DULLING_BASHCHOP
 	layer = ABOVE_MOB_LAYER
-
-/obj/structure/fluff/railing/wood/north
-	dir = 1
-
-/obj/structure/fluff/railing/wood/east
-	dir = 4
-
-/obj/structure/fluff/railing/wood/west
-	dir = 8
 
 /obj/structure/fluff/railing/stonehedge
 	name = "stone railing"
@@ -166,16 +148,15 @@
 	icon_state = "border"
 	pass_crawl = FALSE
 
-/obj/structure/fluff/railing/border/north
-	dir = 1
-
-/obj/structure/fluff/railing/border/east
-	dir = 4
-
-/obj/structure/fluff/railing/border/west
-	dir = 8
-
-
+/obj/structure/fluff/railing/tall
+	name = "wooden fence"
+	desc = "A sturdy fence of wooden planks."
+	icon = 'icons/roguetown/misc/tallwoodenrailing.dmi'
+	icon_state = "tallwoodenrailing"
+	max_integrity = 500
+	pass_crawl = FALSE
+	pass_throwing = FALSE
+	pass_projectile = TRUE
 
 /obj/structure/fluff/railing/tall/palisade
 	name = "palisade"
@@ -185,10 +166,6 @@
 	opacity = TRUE
 	climb_offset = 6
 	pass_projectile = FALSE
-	max_integrity = 500
-	pass_crawl = FALSE
-	pass_throwing = FALSE
-	pass_projectile = TRUE
 
 /obj/structure/bars
 	name = "bars"
@@ -220,23 +197,11 @@
 			chance += (L.STALUC - 10) * 10
 		return prob(clamp(chance, 0, 100))
 
-/obj/structure/bars/shop
-	icon_state = "barsbent"
-	layer = BELOW_OBJ_LAYER
-
 /obj/structure/bars/bent
 	icon_state = "barsbent"
 
 /obj/structure/bars/chainlink
 	icon_state = "chainlink"
-
-/obj/structure/bars/steel
-	name = "steel bars"
-	max_integrity = 2000
-
-/obj/structure/bars/tough
-	max_integrity = 9000
-	damage_deflection = 40
 
 /obj/structure/bars/alt
 	icon_state = "bars_alt"
@@ -436,10 +401,6 @@
 						user.mind.special_items -= item
 						var/obj/item/I = new path2item(user.loc)
 						user.put_in_hands(I)
-						if (istype(I, /obj/item/clothing)) // commit any pref dyes to our item if it is clothing and we have them available
-							var/dye = user.client?.prefs.resolve_loadout_to_color(path2item)
-							if (dye)
-								I.add_atom_colour(dye, FIXED_COLOUR_PRIORITY)
 			return SECONDARY_ATTACK_CANCEL_ATTACK_CHAIN
 
 /obj/structure/fluff/clock/examine(mob/user)
@@ -694,10 +655,6 @@
 						user.mind.special_items -= item
 						var/obj/item/I = new path2item(user.loc)
 						user.put_in_hands(I)
-						if (istype(I, /obj/item/clothing)) // commit any pref dyes to our item if it is clothing and we have them available
-							var/dye = user.client?.prefs.resolve_loadout_to_color(path2item)
-							if (dye)
-								I.add_atom_colour(dye, FIXED_COLOUR_PRIORITY)
 			return SECONDARY_ATTACK_CANCEL_ATTACK_CHAIN
 
 /obj/structure/fluff/statue/CanPass(atom/movable/mover, turf/target)
@@ -727,9 +684,6 @@
 /obj/structure/fluff/statue/knight
 	icon_state = "knightstatue_l"
 
-/obj/structure/fluff/statue/aasimar
-	icon_state = "aasimar"
-
 /obj/structure/fluff/statue/OnCrafted(dirin, mob/user)
 	. = ..()
 	for(var/obj/structure/fluff/statue/carving_block in contents)
@@ -739,7 +693,7 @@
 
 /obj/structure/fluff/statue/astrata
 	name = "statue of Astrata"
-	desc = "Astrata, the Sun King, reigns over light, order, and conquest. He is worshipped and feared in equal measure."
+	desc = "Astrata, the Sun Queen, reigns over light, order, and conquest. She is worshipped and feared in equal measure."
 	icon = 'icons/roguetown/misc/tallandwide.dmi'
 	icon_state = "astrata"
 	max_integrity = 100 // You wanted descructible statues, you'll get them.
@@ -788,24 +742,6 @@
 	icon = 'icons/roguetown/misc/ay.dmi'
 	icon_state = "1"
 	SET_BASE_PIXEL(-32, -16)
-
-/obj/structure/fluff/statue/femalestatue1
-	icon = 'icons/roguetown/misc/ay.dmi'
-	icon_state = "2"
-	pixel_x = -32
-	pixel_y = -16
-
-/obj/structure/fluff/statue/femalestatue2
-	icon = 'icons/roguetown/misc/ay.dmi'
-	icon_state = "5"
-	pixel_x = -32
-	pixel_y = -16
-
-/obj/structure/fluff/statue/femalestatue/zizo
-	icon = 'icons/roguetown/misc/ay.dmi'
-	icon_state = "4"
-	pixel_x = -32
-	pixel_y = -16
 
 /obj/structure/fluff/statue/femalestatue/clean
 	icon_state = "12"
@@ -977,12 +913,12 @@
 									amt2raise = 0
 						if(amt2raise > 0)
 							user.adjust_experience(W.associated_skill, amt2raise * boon, FALSE)
-						playsound(loc,pick('sound/combat/hits/onwood/education1.ogg','sound/combat/hits/onwood/education2.ogg','sound/combat/hits/onwood/education3.ogg'), rand(50,100), FALSE)
+						playsound(src,pick('sound/combat/hits/onwood/education1.ogg','sound/combat/hits/onwood/education2.ogg','sound/combat/hits/onwood/education3.ogg'), rand(50,100), FALSE)
 					else
 						user.visible_message("<span class='danger'>[user] trains on [src], but [src] ripostes!</span>")
 						L.AdjustKnockdown(1)
 						L.throw_at(get_step(L, get_dir(src,L)), 2, 2, L, spin = FALSE)
-						playsound(loc, 'sound/combat/hits/kick/stomp.ogg', 100, TRUE, -1)
+						playsound(src, 'sound/combat/hits/kick/stomp.ogg', 100, TRUE, -1)
 					flick(pick("p_dummy_smashed","p_dummy_smashedalt"),src)
 					return
 			else //sanity
@@ -993,7 +929,7 @@
 			user.visible_message("<span class='danger'>[user] awkwardly tries to hit \the [src] with \the [W], but \the [src] ripostes!</span>")
 			goof.AdjustKnockdown(1)
 			goof.throw_at(get_step(goof, get_dir(src,goof)), 2, 2, goof, spin = FALSE)
-			playsound(loc, 'sound/combat/hits/kick/stomp.ogg', 100, TRUE, -1)
+			playsound(src, 'sound/combat/hits/kick/stomp.ogg', 100, TRUE, -1)
 			flick(pick("p_dummy_smashed","p_dummy_smashedalt"),src)
 			return
 	..()
@@ -1020,7 +956,7 @@
 	if(istype(W, objective))
 		if(user.mind)
 			if(isdarkelf(user))
-				playsound(loc,'sound/misc/eat.ogg', rand(30,60), TRUE)
+				playsound(src,'sound/misc/eat.ogg', rand(30,60), TRUE)
 				current += 1
 				SSmapping.retainer.delf_ears += 1
 				if(current >= goal)
@@ -1054,7 +990,6 @@
 			else if(istype(W, /obj/item/coin) || istype(W, /obj/item/gem) || istype(W, /obj/item/reagent_containers/glass/cup/silver) || istype(W, /obj/item/reagent_containers/glass/cup/golden) || istype(W, /obj/item/reagent_containers/glass/carafe) || istype(W, /obj/item/clothing/ring) || istype(W, /obj/item/clothing/head/crown/circlet) || istype(W, /obj/item/statue))
 				if(!istype(W, /obj/item/coin))
 					B.contrib += (W.get_real_price() / 2) // sell jewelry and other fineries, though at a lesser price compared to fencing them first
-					B.contrib += (W.get_real_price() / 2) // sell jewelry and other fineries, though at a lesser price compared to fencing them first
 					record_round_statistic(STATS_SHRINE_VALUE, (W.get_real_price() / 2))
 				else
 					B.contrib += W.get_real_price()
@@ -1065,8 +1000,8 @@
 			if(B.contrib >= 80)
 				give_rewards(B, user)
 			else
-				playsound(loc,'sound/items/matidol1.ogg', 50, TRUE)
-			playsound(loc,'sound/misc/eat.ogg', rand(30, 60), TRUE)
+				playsound(src,'sound/items/matidol1.ogg', 50, TRUE)
+			playsound(src,'sound/misc/eat.ogg', rand(30, 60), TRUE)
 			qdel(W)
 			return
 
@@ -1105,7 +1040,7 @@
 	if(offering_bandit.contrib >= 100 && offering_bandit.tri_amt < 8)
 		give_rewards(offering_bandit, user)
 	else
-		playsound(loc,'sound/items/matidol2.ogg', 50, TRUE)
+		playsound(src,'sound/items/matidol2.ogg', 50, TRUE)
 
 /obj/structure/fluff/psycross
 	name = "pantheon cross"
@@ -1395,8 +1330,7 @@
 	if(generic_message && M != user)
 		to_chat(M, span_danger("[src] emits a blinding light!"))
 	if(M.flash_act())
-		var/diff = power - M.confused
-		M.confused += min(power, diff)
+		M.set_confusion_if_lower(power SECONDS)
 
 /obj/structure/fluff/psycross/psydon
 	name = "psydonian cross"
@@ -1549,32 +1483,5 @@
 
 /obj/structure/fluff/steamvent/Initialize()
 	. = ..()
-	MakeParticleEmitter(/particles/smoke/cig/big)
-
-/obj/structure/fluff/pillow
-	name = "pillows"
-	desc = "Soft plush pillows. Resting your head on one is so relaxing."
-	icon = 'icons/roguetown/misc/structure.dmi'
-	icon_state = "pillow"
-	density = FALSE
-
-/obj/structure/fluff/pillow/red
-	color = "#8b2323"
-
-/obj/structure/fluff/pillow/blue
-	color = "#173266"
-
-/obj/structure/fluff/pillow/green
-	color = "#264d26"
-
-/obj/structure/fluff/pillow/brown
-	color = "#61462c"
-
-/obj/structure/fluff/pillow/magenta
-	color = "#962e5c"
-
-/obj/structure/fluff/pillow/purple
-	color = "#8747b1"
-
-/obj/structure/fluff/pillow/black
-	color = "#2b292e"
+	var/obj/effect/abstract/shared_particle_holder/steamvent_particle = add_shared_particles(/particles/smoke/cig/big, "steam_vent", pool_size = 4)
+	steamvent_particle.particles.position = generator(GEN_BOX, list(-14, -14), list(14, 14))

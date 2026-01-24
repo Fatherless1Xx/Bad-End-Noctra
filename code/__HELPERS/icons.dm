@@ -1034,9 +1034,10 @@ GLOBAL_LIST_EMPTY(friendly_animal_types)
 		body.equipOutfit(outfit, TRUE)
 
 	body.update_inv_hands(hide_experimental = TRUE)
-	body.update_inv_belt(hide_experimental = TRUE)
-	body.update_inv_back(hide_experimental = TRUE)
-	body.update_inv_head(hide_nonstandard = TRUE)
+	body.update_inv_belt_real(hide_experimental = TRUE)
+	body.update_inv_back_real(hide_experimental = TRUE)
+	body.update_inv_head_real(hide_nonstandard = TRUE)
+	body.process_pending_icon_updates()
 
 	var/icon/out_icon = icon('icons/effects/effects.dmi', "nothing")
 	for(var/D in showDirs)
@@ -1045,9 +1046,10 @@ GLOBAL_LIST_EMPTY(friendly_animal_types)
 		out_icon.Insert(partial,dir=D)
 
 	body.update_inv_hands()
-	body.update_inv_belt()
-	body.update_inv_back()
-	body.update_inv_head()
+	body.update_inv_belt_real()
+	body.update_inv_back_real()
+	body.update_inv_head_real()
+	body.process_pending_icon_updates()
 
 	humanoid_icon_cache[icon_id] = out_icon
 	dummy_key ? unset_busy_human_dummy(dummy_key) : qdel(body)
@@ -1315,7 +1317,7 @@ GLOBAL_LIST_INIT(freon_color_matrix, list("#2E5E69", "#60A2A8", "#A1AFB1", rgb(0
 /proc/copy_appearance_filter_overlays(appearance_to_copy) as /mutable_appearance
 	RETURN_TYPE(/mutable_appearance)
 	var/mutable_appearance/copy = new(appearance_to_copy)
-	var/static/list/plane_whitelist = list(FLOAT_PLANE, GAME_PLANE, FLOOR_PLANE)
+	var/static/list/plane_whitelist = list(FLOAT_PLANE, GAME_PLANE, GAME_PLANE_FOV_HIDDEN, FLOOR_PLANE)
 
 	copy.overlays = recursively_filter_emissive_blockers(copy.overlays, plane_whitelist)
 	copy.underlays = recursively_filter_emissive_blockers(copy.underlays, plane_whitelist)
@@ -1519,9 +1521,10 @@ GLOBAL_LIST_EMPTY(headshot_cache)
 			GLOB.headshot_cache -= cache_key
 
 	target.update_inv_hands(hide_experimental = TRUE)
-	target.update_inv_belt(hide_experimental = TRUE)
-	target.update_inv_back(hide_experimental = TRUE)
-	target.update_inv_head(hide_nonstandard = TRUE)
+	target.update_inv_belt_real(hide_experimental = TRUE)
+	target.update_inv_back_real(hide_experimental = TRUE)
+	target.update_inv_head_real(hide_nonstandard = TRUE)
+	target.process_pending_icon_updates()
 	var/was_typing = target.typing
 	if(was_typing)
 		target.set_typing_indicator(FALSE)
@@ -1531,9 +1534,10 @@ GLOBAL_LIST_EMPTY(headshot_cache)
 	dummy.dir = SOUTH
 
 	target.update_inv_hands()
-	target.update_inv_belt()
-	target.update_inv_back()
-	target.update_inv_head()
+	target.update_inv_belt_real()
+	target.update_inv_back_real()
+	target.update_inv_head_real()
+	target.process_pending_icon_updates()
 	if(was_typing)
 		target.set_typing_indicator(TRUE)
 
@@ -1553,3 +1557,17 @@ GLOBAL_LIST_EMPTY(headshot_cache)
 		"html" = icon_html
 	)
 	return icon_html
+
+/// Returns a cached mutable appearance for damage overlays
+/proc/get_cached_damage_overlay(icon, icon_state, layer, pixel_x = 0, pixel_y = 0, overlay_color)
+	var/key = "[icon]|[icon_state]|[layer]|[pixel_x]|[pixel_y]|[overlay_color]"
+	var/mutable_appearance/cached = GLOB.damage_overlay_cache[key]
+	if(!cached)
+		cached = mutable_appearance(icon, icon_state, -layer)
+		if(pixel_x || pixel_y)
+			cached.pixel_x = pixel_x
+			cached.pixel_y = pixel_y
+		if(overlay_color)
+			cached.color = overlay_color
+		GLOB.damage_overlay_cache[key] = cached
+	return cached

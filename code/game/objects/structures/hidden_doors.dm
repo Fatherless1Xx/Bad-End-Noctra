@@ -309,6 +309,7 @@ GLOBAL_LIST_EMPTY(secret_door_managers)
 	/// this is used by both the door manager and a nonlinked door
 	var/accessor_trait
 	var/list/vips = list()
+	var/vip_message
 	var/memory_name
 	/// optional preset open phrase for a door manager
 	var/open_phrase

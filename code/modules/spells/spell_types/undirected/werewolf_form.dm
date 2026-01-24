@@ -21,12 +21,15 @@
 		return FALSE
 	if(!isliving(owner))
 		return FALSE
-	var/mob/living/carbon/human/human = owner
-	if(is_species(human, /datum/species/werewolf))
+	var/datum/antagonist/werewolf/werewolf_antag = IS_WEREWOLF(owner)
+	if(!werewolf_antag)
 		return FALSE
+	if(werewolf_antag.transformed)
+		return FALSE
+	var/mob/living/carbon/human/human = owner
 	if(!human.rage_datum)
 		return FALSE
-	if(!human.rage_datum.check_rage(text2num(RAGE_LEVEL_MEDIUM)))
+	if(!human.rage_datum.check_rage(text2num(WW_RAGE_MEDIUM)))
 		return FALSE
 	return TRUE
 
@@ -35,5 +38,5 @@
 	transformation()
 
 /datum/action/cooldown/spell/undirected/werewolf_form/proc/transformation()
-	var/mob/living/carbon/human/human = owner
-	human.werewolf_transform()
+	var/datum/antagonist/werewolf/werewolf_antag = IS_WEREWOLF(owner)
+	werewolf_antag?.begin_transform()

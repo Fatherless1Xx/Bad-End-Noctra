@@ -9,6 +9,8 @@
 	var/stress_rage_multiplier = 0.1
 	/// How much rage decays per process call
 	var/rage_decay_rate = 0.5
+	/// Rage change applied each life tick; overrides rage_decay_rate when set
+	var/rage_change_on_life = 0
 
 	/// Rage threshold tiers for dynamic abilities
 	var/list/rage_thresholds = list(
@@ -36,7 +38,9 @@
 		return
 
 	// Decay rage over time
-	if(rage > 0)
+	if(rage_change_on_life)
+		update_rage(rage_change_on_life)
+	else if(rage > 0)
 		update_rage(-rage_decay_rate)
 
 	// Check if we need to update tier

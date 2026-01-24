@@ -150,7 +150,7 @@
 			V.add_stress(/datum/stress_event/viewgib)
 	. = ..()
 
-/mob/living/carbon/human/revive(full_heal, admin_revive)
+/mob/living/carbon/human/revive(full_heal_flags = NONE, excess_healing = 0, force_grab_ghost = FALSE, full_heal = null, admin_revive = null)
 	. = ..()
 	if(!.)
 		return

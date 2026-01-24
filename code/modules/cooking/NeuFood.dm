@@ -95,7 +95,7 @@
 
 /obj/item/reagent_containers/food/snacks/rotten/mince/throw_impact(atom/hit_atom, datum/thrownthing/thrownthing)
 	new /obj/effect/decal/cleanable/food/mess/rotting/get_turf(src)
-	playsound(get_turf(src), 'sound/foley/meatslap.ogg', 100, TRUE, -1)
+	playsound(src, 'sound/foley/meatslap.ogg', 100, TRUE, -1)
 	..()
 	qdel(src)
 
@@ -262,7 +262,7 @@
 		if(particle_spewer)
 			qdel(particle_spewer)
 		update_appearance(UPDATE_OVERLAYS)
-	playsound(get_turf(src), 'sound/misc/eat.ogg', rand(30, 60), TRUE)
+	playsound(src, 'sound/misc/eat.ogg', rand(30, 60), TRUE)
 	user.visible_message(span_info("[user] eats from [src]."), \
 			span_notice("I swallow a gulp of [src]."))
 	addtimer(CALLBACK(reagents, TYPE_PROC_REF(/datum/reagents, trans_to), user, min(amount_per_transfer_from_this, 5), TRUE, TRUE, FALSE, user, FALSE, INGEST), 5 DECISECONDS)
@@ -287,6 +287,26 @@
 	drop_sound = 'sound/foley/dropsound/armor_drop.ogg'
 	melting_material = /datum/material/tin
 	melt_amount = 20
+	max_usages = 7
+
+/obj/item/reagent_containers/glass/bowl/gold
+	name = "gold bowl"
+	icon_state = "bowl_iron"
+	fill_icon_state = "bowl"
+	drop_sound = 'sound/foley/dropsound/armor_drop.ogg'
+	melting_material = /datum/material/gold
+	melt_amount = 20
+	sellprice = 75
+	max_usages = 7
+
+/obj/item/reagent_containers/glass/bowl/silver
+	name = "silver bowl"
+	icon_state = "bowl_iron"
+	fill_icon_state = "bowl"
+	drop_sound = 'sound/foley/dropsound/armor_drop.ogg'
+	melting_material = /datum/material/silver
+	melt_amount = 20
+	sellprice = 50
 	max_usages = 7
 
 /obj/item/reagent_containers/glass/bowl/jade
@@ -361,25 +381,6 @@
 	sellprice = 85
 	max_usages = 10
 
-/obj/item/reagent_containers/glass/bowl/gold
-	name = "gold bowl"
-	fill_icon_state = "bowl"
-	icon = 'modular_rmh/icons/obj/items/cooking.dmi'
-	icon_state = "bowl_gold"
-	drop_sound = 'sound/foley/dropsound/armor_drop.ogg'
-	melting_material = /datum/material/gold
-	sellprice = 40
-	melt_amount = 20
-
-/obj/item/reagent_containers/glass/bowl/silver
-	name = "silver bowl"
-	icon_state = "bowl_silver"
-	icon = 'modular_rmh/icons/obj/items/cooking.dmi'
-	drop_sound = 'sound/foley/dropsound/armor_drop.ogg'
-	melting_material = /datum/material/silver
-	sellprice = 30
-	melt_amount = 20
-
 
 /obj/item/reagent_containers/glass/bowl/clay
 	desc = "Made from fired clay."
@@ -393,7 +394,7 @@
 
 /obj/item/reagent_containers/glass/bowl/clay/throw_impact(atom/hit_atom, datum/thrownthing/thrownthing)
 	new /obj/effect/decal/cleanable/shreds/clay(get_turf(src))
-	playsound(get_turf(src), 'sound/foley/break_clay.ogg', 90, TRUE)
+	playsound(src, 'sound/foley/break_clay.ogg', 90, TRUE)
 	..()
 	qdel(src)
 
@@ -585,7 +586,7 @@
 
 /datum/reagent/flour/on_mob_life(mob/living/carbon/M)
 	if(prob(30))
-		M.confused = max(M.confused + 3, 0)
+		M.adjust_confusion(6 SECONDS)
 	M.emote(pick("cough"))
 	..()
 

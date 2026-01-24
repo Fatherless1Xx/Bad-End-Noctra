@@ -270,6 +270,9 @@ GLOBAL_LIST_EMPTY(personal_objective_minds)
 
 /// transfers this mind's control to a new mob
 /datum/mind/proc/transfer_to(mob/new_character, force_key_move = 0)
+	if(!isliving(new_character))
+		stack_trace("mind.transfer_to called with non-living target [new_character] ([new_character?.type])")
+		return FALSE
 	if(current)	// remove ourself from our old body's mind variable
 		current.mind = null
 		UnregisterSignal(current, COMSIG_MOB_DEATH)

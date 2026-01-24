@@ -365,19 +365,42 @@
 
 /mob/living/carbon/resist_leash()
 	if(!has_status_effect(/datum/status_effect/leash_pet))
-		return
+		return FALSE
 	to_chat(src, span_notice("I reach for the hook on my collar..."))
 	var/deleash = 5 SECONDS
 	if(handcuffed)
 		deleash = 20 SECONDS
 	if(do_after(src, deleash, target = src))
 		if(QDELETED(src))
-			return
+			return FALSE
+		var/datum/component/leash/leash_component = GetComponent(/datum/component/leash)
+		var/obj/item/leash/leash_item
+		if(leash_component && istype(leash_component.owner, /obj/item/leash))
+			leash_item = leash_component.owner
+		if(leash_item)
+			if(leash_item.leash_master)
+				UnregisterSignal(leash_item.leash_master, COMSIG_MOVABLE_MOVED)
+				leash_item.leash_master.remove_status_effect(/datum/status_effect/leash_owner)
+			UnregisterSignal(src, COMSIG_MOVABLE_MOVED)
+			UnregisterSignal(src, COMSIG_PARENT_EXAMINE)
+			leash_item.leash_freepet = null
+			leash_item.leash_master = null
+			leash_item.leash_pet = null
+			leash_item.leashed = FALSE
+		if(leash_component)
+			if(leash_component.break_callback)
+				leash_component.break_callback.Invoke()
+			qdel(leash_component)
 		to_chat(src, "<span class='warning'>[src] has removed their leash!</span>")
 		remove_status_effect(/datum/status_effect/leash_pet)
+		remove_status_effect(/datum/status_effect/leash_freepet)
+		return TRUE
 	return
 
 /mob/living/carbon/resist_restraints()
+	if(has_status_effect(/datum/status_effect/leash_pet))
+		resist_leash()
+		return
 	var/obj/item/I = null
 	var/type = 0
 	if(handcuffed)
@@ -1017,38 +1040,46 @@
 	update_inv_handcuffed()
 	update_hud_handcuffed()
 
-/mob/living/carbon/fully_heal(admin_revive = FALSE)
-	if(reagents)
-		reagents.clear_reagents()
-		for(var/addi in reagents.addiction_list)
-			reagents.remove_addiction(addi)
-	for(var/obj/item/organ/organ as anything in internal_organs)
-		organ.setOrganDamage(0)
-	var/obj/item/organ/brain/B = getorgan(/obj/item/organ/brain)
-	if(B)
-		B.brain_death = FALSE
-	var/datum/component/rot/corpse/CR = GetComponent(/datum/component/rot/corpse)
-	if(CR)
-		CR.amount = 0
-	if(admin_revive) //reset rot on admin revives
+/mob/living/carbon/fully_heal(heal_flags = HEAL_ALL)
+	if(heal_flags & (HEAL_ORGANS | HEAL_REFRESH_ORGANS))
+		for(var/obj/item/organ/organ as anything in internal_organs)
+			organ.setOrganDamage(0)
+		var/obj/item/organ/brain/B = getorgan(/obj/item/organ/brain)
+		if(B)
+			B.brain_death = FALSE
+
+	if(heal_flags & HEAL_REFRESH_ORGANS)
+		regenerate_organs()
+
+	if(heal_flags & HEAL_LIMBS)
+		regenerate_limbs()
+
+	if(heal_flags & HEAL_BODY)
+		var/datum/component/rot/corpse/CR = GetComponent(/datum/component/rot/corpse)
+		if(CR)
+			CR.amount = 0
+
+	if(heal_flags & HEAL_ADMIN) //reset rot on admin revives
 		for(var/obj/item/bodypart/bodypart as anything in bodyparts)
 			bodypart.rotted = FALSE
 			bodypart.skeletonized = FALSE
-	if(admin_revive)
-		suiciding = FALSE
-		regenerate_limbs()
-		regenerate_organs()
+		if(reagents)
+			reagents.addiction_list = list()
+
+	if(heal_flags & HEAL_RESTRAINTS)
 		set_handcuffed(null)
 		for(var/obj/item/restraints/R in contents) //actually remove cuffs from inventory
 			qdel(R)
 		update_handcuffed()
-		if(reagents)
-			reagents.addiction_list = list()
-	cure_all_traumas(TRAUMA_RESILIENCE_MAGIC)
-	..()
+
+	if(heal_flags & HEAL_TRAUMAS)
+		cure_all_traumas(TRAUMA_RESILIENCE_MAGIC)
+
+	..(heal_flags)
 	// heal ears after healing traits, since ears check TRAIT_DEAF trait
 	// when healing.
-	restoreEars()
+	if(heal_flags & (HEAL_ORGANS | HEAL_REFRESH_ORGANS))
+		restoreEars()
 	// update_disabled_bodyparts()
 
 /mob/living/carbon/can_be_revived()
