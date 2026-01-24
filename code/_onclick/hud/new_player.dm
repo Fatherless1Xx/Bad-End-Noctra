@@ -139,12 +139,13 @@ INITIALIZE_IMMEDIATE(/atom/movable/screen/lobby)
 
 /atom/movable/screen/lobby/button/character_setup/Initialize(mapload, datum/hud/hud_owner)
 	. = ..()
-	if(SSatoms.initialized == INITIALIZATION_INNEW_REGULAR)
-		flick("[base_icon_state]_enabled", src)
-		set_button_status(TRUE)
-	else
-		set_button_status(FALSE)
-		RegisterSignal(SSatoms, COMSIG_SUBSYSTEM_POST_INITIALIZE, PROC_REF(enable_character_setup))
+	if(SSatoms.initialized != INITIALIZATION_INSSATOMS)
+		enable_character_setup()
+		return
+
+	set_button_status(FALSE)
+	RegisterSignal(SSatoms, COMSIG_SUBSYSTEM_POST_INITIALIZE, PROC_REF(enable_character_setup))
+	addtimer(CALLBACK(src, PROC_REF(check_character_setup_ready)), 1 SECONDS)
 
 /atom/movable/screen/lobby/button/character_setup/Click(location, control, params)
 	. = ..()
@@ -155,8 +156,19 @@ INITIALIZE_IMMEDIATE(/atom/movable/screen/lobby)
 
 /atom/movable/screen/lobby/button/character_setup/proc/enable_character_setup()
 	SIGNAL_HANDLER
+	if(enabled)
+		return
+	UnregisterSignal(SSatoms, COMSIG_SUBSYSTEM_POST_INITIALIZE)
 	flick("[base_icon_state]_enabled", src)
 	set_button_status(TRUE)
+
+/atom/movable/screen/lobby/button/character_setup/proc/check_character_setup_ready()
+	if(QDELETED(src) || enabled)
+		return
+	if(SSatoms.initialized == INITIALIZATION_INSSATOMS)
+		addtimer(CALLBACK(src, PROC_REF(check_character_setup_ready)), 1 SECONDS)
+		return
+	enable_character_setup()
 
 ///Button that appears before the game has started
 /atom/movable/screen/lobby/button/ready

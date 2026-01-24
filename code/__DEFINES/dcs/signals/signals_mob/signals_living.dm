@@ -64,6 +64,10 @@
 	#define COMPONENT_CANT_TRACK 1
 ///from base of mob/living/death(): (gibbed)
 #define COMSIG_LIVING_DEATH "living_death"
+/// sent when a mob tries to enter the afterlife (used by hardcore quirk)
+#define COMSIG_LIVING_TRY_ENTER_AFTERLIFE "try_enter_afterlife"
+/// sent to attacker when they kill another living mob
+#define COMSIG_LIVING_COMBAT_KILL "kill_other"
 /// From /mob/living/befriend() : (mob/living/new_friend)
 #define COMSIG_LIVING_BEFRIENDED "living_befriended"
 /// From /mob/living/unfriend() : (mob/living/old_friend)

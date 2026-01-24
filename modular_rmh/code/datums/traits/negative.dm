@@ -382,3 +382,75 @@
 	time = 50 MINUTES
 	needsate_text = "Time to reach a new high."
 
+/datum/quirk/vice/hunted
+	name = "Hunted"
+	desc = "Something in your past has made you a target. You're always looking over your shoulder. This is a difficult quirk."
+	value = -5
+	var/logged = FALSE
+
+/datum/quirk/vice/hunted/on_process()
+	if(!ishuman(quirk_holder))
+		return
+	var/mob/living/carbon/human/H = quirk_holder
+	if(!logged && H.name)
+		log_hunted("[H.ckey] playing as [H.name] has the hunted quirk.")
+		logged = TRUE
+
+/datum/quirk/vice/hardcore
+	name = "Hardcore"
+	desc = "ONE CHANCE. When you die, you have no place in the underworld. You will be reincarnated as a rat, unable to do anything."
+	value = -3
+	var/turning = FALSE
+
+/datum/quirk/vice/hardcore/on_spawn()
+	if(!ishuman(quirk_holder))
+		return
+	RegisterSignal(quirk_holder, COMSIG_LIVING_DEATH, PROC_REF(on_death))
+	RegisterSignal(quirk_holder, COMSIG_LIVING_TRY_ENTER_AFTERLIFE, PROC_REF(on_death))
+	to_chat(quirk_holder, span_boldwarning("You have chosen HARDCORE mode. If you die, you will become a rat. There are no second chances."))
+
+/datum/quirk/vice/hardcore/remove()
+	if(!ishuman(quirk_holder))
+		return
+	UnregisterSignal(quirk_holder, COMSIG_LIVING_DEATH)
+	UnregisterSignal(quirk_holder, COMSIG_LIVING_TRY_ENTER_AFTERLIFE)
+
+/datum/quirk/vice/hardcore/on_process()
+	return
+
+/datum/quirk/vice/hardcore/proc/on_death(mob/living/source)
+	if(turning)
+		return TRUE
+	if(!ishuman(source))
+		return
+
+	addtimer(CALLBACK(src, PROC_REF(transform_to_rat), source), 3 SECONDS)
+	turning = TRUE
+	return TRUE
+
+/datum/quirk/vice/hardcore/proc/transform_to_rat(mob/living/carbon/human/H)
+	turning = FALSE
+	if(!H?.mind)
+		return
+
+	var/turf/T
+	if(!H || QDELETED(H))
+		T = get_turf(pick(SSjob.latejoin_trackers))
+	else
+		T = get_turf(H)
+	if(!T)
+		return
+
+	var/mob/living/simple_animal/hostile/retaliate/smallrat/new_rat = new(T)
+	H.mind.transfer_to(new_rat)
+
+	to_chat(new_rat, span_userdanger("You have been reincarnated as a rat. Your adventure ends here."))
+
+	ADD_TRAIT(new_rat, TRAIT_PACIFISM, TRAIT_GENERIC)
+	ADD_TRAIT(new_rat, TRAIT_MUTE, TRAIT_GENERIC)
+	new_rat.melee_damage_lower = 0
+	new_rat.melee_damage_upper = 0
+	new_rat.obj_damage = 0
+	new_rat.status_flags |= GODMODE
+	ADD_TRAIT(new_rat, TRAIT_NOFIRE, TRAIT_GENERIC)
+

@@ -397,10 +397,8 @@ GLOBAL_LIST_EMPTY(collar_masters)
 		if(mindparent?.current)
 			to_chat(mindparent.current, span_warning("The link through the [source] fails to cast the pet's spirit out."))
 		return FALSE
-	ghost.can_reenter_corpse = FALSE
 	to_chat(ghost, span_warning("Your spirit is yanked from your body by the [source]! You will be pulled back soon."))
-	pet_mind.transfer_to(ghost, TRUE)
-	if(pet_mind.current != ghost)
+	if(ghost.mind != pet_mind)
 		if(mindparent?.current)
 			to_chat(mindparent.current, span_warning("The [source] fizzles; the link to the pet's spirit fails."))
 		pet_ghost_cleanup(ghost)
@@ -461,7 +459,7 @@ GLOBAL_LIST_EMPTY(collar_masters)
 		mindparent.transfer_to(master_body, TRUE)
 	if(pet_mind && pet_body && !QDELETED(pet_body) && pet_mind.current != pet_body)
 		pet_mind.transfer_to(pet_body, TRUE)
-	if(pet_ghost && !QDELETED(pet_ghost))
+	if(pet_ghost && !QDELETED(pet_ghost) && pet_ghost.client)
 		pet_ghost.reenter_corpse(TRUE)
 	if(master_body && !QDELETED(master_body) && master_skills_holder)
 		master_skills_holder.set_current(master_body)
@@ -483,16 +481,16 @@ GLOBAL_LIST_EMPTY(collar_masters)
 	return TRUE
 
 /datum/component/collar_master/proc/pet_ghost_cleanup(mob/dead/observer/ghost)
-	if(ghost && !QDELETED(ghost))
+	if(ghost && !QDELETED(ghost) && ghost.client)
 		ghost.reenter_corpse(TRUE)
 	return TRUE
 
 /datum/component/collar_master/proc/create_pet_ghost(mob/living/carbon/human/pet)
 	if(!pet?.client)
 		return null
-	var/mob/dead/observer/rogue/ghost = new(pet)
-	SStgui.on_transfer(pet, ghost)
-	ghost.key = pet.key
+	var/mob/dead/observer/ghost = pet.ghostize(can_reenter_corpse = FALSE)
+	if(!ghost)
+		return null
 	ghost.can_reenter_corpse = FALSE
 	ghost.name = "[pet.real_name]'s spirit"
 	return ghost

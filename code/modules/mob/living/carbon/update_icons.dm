@@ -41,6 +41,8 @@
 
 /// Schedule a deferred icon update - batches multiple calls in the same tick
 /mob/living/carbon/proc/queue_icon_update(update_type)
+	if(QDELETED(src))
+		return
 	pending_icon_updates |= update_type
 	if(!icon_update_scheduled_time || icon_update_scheduled_time < world.time)
 		icon_update_scheduled_time = world.time
@@ -48,6 +50,16 @@
 
 /// Process all pending icon updates in a single batch
 /mob/living/carbon/proc/process_pending_icon_updates()
+	if(QDELETED(src))
+		pending_icon_updates = NONE
+		icon_update_scheduled_time = 0
+		return
+	if(ishuman(src))
+		var/mob/living/carbon/human/H = src
+		if(!H.dna || !H.dna.species)
+			pending_icon_updates = NONE
+			icon_update_scheduled_time = 0
+			return
 	while(pending_icon_updates)
 		var/updates = pending_icon_updates
 		pending_icon_updates = NONE
@@ -79,6 +91,7 @@
 			update_inv_pants_real()
 		if(updates & PENDING_UPDATE_INV_CLOAK)
 			update_inv_cloak_real()
+	update_reflection()
 	icon_update_scheduled_time = 0
 
 // Base implementations for carbon mobs - these are just stubs in case someone makes a non-human carbon mob

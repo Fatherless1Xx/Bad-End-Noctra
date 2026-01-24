@@ -20,7 +20,11 @@ GLOBAL_LIST_EMPTY(bitflag_lists)
 			} \
 			txt_signature = ""; \
 			for(var/value in target) { \
-				txt_signature += "[value],"; \
+				var/value_text = "[value]"; \
+				if(copytext(value_text, length(value_text), length(value_text) + 1) != ",") { \
+					value_text += ","; \
+				}; \
+				txt_signature += value_text; \
 			}; \
 			target = txt_signature; \
 		}; \

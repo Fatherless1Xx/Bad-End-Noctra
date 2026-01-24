@@ -74,7 +74,8 @@ SUBSYSTEM_DEF(job)
 /datum/controller/subsystem/job/proc/AssignRole(mob/dead/new_player/player, datum/job/job, latejoin = FALSE)
 	JobDebug("Running AR, Player: [player], Rank: [job?.type || "null"], LJ: [latejoin]")
 	if(!player || !player.mind || !job)
-		JobDebug("AR has failed, Player: [player], Rank: [job.get_informed_title(player)]")
+		var/job_name = (job && player) ? job.get_informed_title(player) : "null"
+		JobDebug("AR has failed, Player: [player], Rank: [job_name]")
 		return FALSE
 	if(is_banned_from(player.ckey, job.title) || QDELETED(player))
 		return FALSE

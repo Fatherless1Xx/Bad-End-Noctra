@@ -113,6 +113,8 @@ GLOBAL_PROTECT(no_child_icons)
 
 /mob/living/carbon/human/proc/update_damage_overlays_real()
 	var/datum/species/species = dna?.species
+	if(!species)
+		return
 	if(species?.update_damage_overlays(src))
 		return
 
@@ -652,10 +654,11 @@ GLOBAL_PROTECT(no_child_icons)
 			use_female_sprites = FEMALE_SPRITES
 
 	var/list/offsets
-	if(use_female_sprites && !(gender == MALE && species.swap_male_clothes_but_not_offsets))
-		offsets = (age == AGE_CHILD) ? species.offset_features_child : species.offset_features_f
-	else
-		offsets = (age == AGE_CHILD) ? species.offset_features_child : species.offset_features_m
+	if(species)
+		if(use_female_sprites && !(gender == MALE && species.swap_male_clothes_but_not_offsets))
+			offsets = (age == AGE_CHILD) ? species.offset_features_child : species.offset_features_f
+		else
+			offsets = (age == AGE_CHILD) ? species.offset_features_child : species.offset_features_m
 
 	var/racecustom
 	if(species?.custom_clothes)
@@ -828,10 +831,11 @@ GLOBAL_PROTECT(no_child_icons)
 			use_female_sprites = FEMALE_SPRITES
 
 	var/list/offsets
-	if(use_female_sprites && !(gender == MALE && species.swap_male_clothes_but_not_offsets))
-		offsets = (age == AGE_CHILD) ? species.offset_features_child : species.offset_features_f
-	else
-		offsets = (age == AGE_CHILD) ? species.offset_features_child : species.offset_features_m
+	if(species)
+		if(use_female_sprites && !(gender == MALE && species.swap_male_clothes_but_not_offsets))
+			offsets = (age == AGE_CHILD) ? species.offset_features_child : species.offset_features_f
+		else
+			offsets = (age == AGE_CHILD) ? species.offset_features_child : species.offset_features_m
 
 	if(backr)
 		if(backr.alternate_worn_layer == CLOAK_BEHIND_LAYER)
@@ -943,10 +947,11 @@ GLOBAL_PROTECT(no_child_icons)
 			use_female_sprites = FEMALE_SPRITES
 
 	var/list/offsets
-	if(use_female_sprites && !(gender == MALE && species.swap_male_clothes_but_not_offsets))
-		offsets = (age == AGE_CHILD) ? species.offset_features_child : species.offset_features_f
-	else
-		offsets = (age == AGE_CHILD) ? species.offset_features_child : species.offset_features_m
+	if(species)
+		if(use_female_sprites && !(gender == MALE && species.swap_male_clothes_but_not_offsets))
+			offsets = (age == AGE_CHILD) ? species.offset_features_child : species.offset_features_f
+		else
+			offsets = (age == AGE_CHILD) ? species.offset_features_child : species.offset_features_m
 
 	var/racecustom
 	if(species?.custom_clothes)
@@ -1081,7 +1086,7 @@ GLOBAL_PROTECT(no_child_icons)
 			overlays_standing[SHIRTSLEEVE_LAYER] = sleeves
 
 	update_body_parts(redraw = TRUE)
-	dna.species.handle_body(src)
+	dna?.species?.handle_body(src)
 	update_body()
 
 	apply_overlay(SHIRT_LAYER)
@@ -1147,7 +1152,7 @@ GLOBAL_PROTECT(no_child_icons)
 			overlays_standing[ARMORSLEEVE_LAYER] = sleeves
 
 	update_body_parts(redraw = TRUE)
-	dna.species.handle_body(src)
+	dna?.species?.handle_body(src)
 	update_body()
 	update_inv_shirt() // fix boob
 
@@ -1590,6 +1595,8 @@ generate/load female uniform sprites matching all previously decided variables
 
 //produces a key based on the human's limbs
 /mob/living/carbon/human/generate_icon_render_key()
+	if(!dna?.species)
+		return null
 	. = list(dna.species.limbs_id)
 	if(dna.species.use_skintones)
 		. += "coloured"
