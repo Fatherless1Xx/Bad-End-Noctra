@@ -797,8 +797,11 @@
 	if(!appears_dead)
 		if(skipface && user.has_flaw(/datum/charflaw/hunted) && user != src)
 			user.add_stress(/datum/stress_event/hunted)
-	if(!obscure_name && (flavortext || headshot_link || ooc_extra_link)) // only show flavor text if there is a flavor text and we show headshot
+	if(!obscure_name && (flavortext || nsfwflavortext || ooc_notes || erpprefs || headshot_link || ooc_extra_link || ooc_extra || length(img_gallery) || length(nsfw_img_gallery))) // only show flavor text if there is a flavor text and we show headshot
 		. += "<a href='?src=[REF(src)];task=view_flavor_text;'>Examine Closer</a>"
+	if(length(rumour) || length(noble_gossip))
+		if(observer_privilege || HAS_TRAIT(user, TRAIT_NOBLE))
+			. += "<a href='?src=[REF(src)];task=view_rumours_gossip;'>Recall Rumours & Gossip</a>"
 
 	var/trait_exam = common_trait_examine()
 	if(!isnull(trait_exam))

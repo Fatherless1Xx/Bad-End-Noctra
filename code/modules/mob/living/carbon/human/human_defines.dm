@@ -116,6 +116,14 @@
 	var/ooc_notes_display = null
 	var/ooc_extra_link
 	var/ooc_extra
+	var/rumour = null
+	var/noble_gossip = null
+	var/song_title
+	var/song_artist
+	var/nsfwflavortext = null
+	var/erpprefs = null
+	var/list/img_gallery = list()
+	var/list/nsfw_img_gallery = list()
 
 	var/confession_points = 0 // Used to track how many confessions the Inquisitor has gotten signed. Used to buy items at mailboxes.
 	var/purchase_history = null // Used to track what the Inquisitor has bought from the mailbox.
